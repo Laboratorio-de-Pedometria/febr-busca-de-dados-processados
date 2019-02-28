@@ -7,7 +7,7 @@ library(leaflet)
 library(stringr)
 
 download <- getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.csv")
-dados <- read.csv(text = download, sep = ";")
+dados <- read.csv(text = download, sep = ";", dec = ",")
 estadoTipo <- unique(dados$estado_id)
 colShow <- dados
 
@@ -313,8 +313,8 @@ server <- function(input, output, session) {
     if(input$est == 'Todos' && input$clasTox == 'Todas'){
         m %>%  
           addAwesomeMarkers(
-            lng = as.numeric(na.omit(sub(',','.',filtroTodos()$coord_x))),
-            lat = as.numeric(na.omit(sub(',','.',filtroTodos()$coord_y))),
+            lng = as.numeric(na.omit(filtroTodos()$coord_x)),
+            lat = as.numeric(na.omit(filtroTodos()$coord_y)),
             icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
             clusterOptions = markerClusterOptions(),
             label = filtroTodos()$observacao_id)
