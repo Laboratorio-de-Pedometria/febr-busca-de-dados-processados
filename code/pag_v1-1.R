@@ -8,7 +8,7 @@ library(stringr)
 
 download <- getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.csv")
 dados <- read.csv(text = download, sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
-estadoTipo <- unique(dados$estado_id)
+# estadoTipo <- unique(dados$estado_id)
 colShow <- dados
 
 
