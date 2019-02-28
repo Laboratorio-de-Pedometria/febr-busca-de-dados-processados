@@ -22,19 +22,15 @@ ui <- fluidPage(
       wellPanel(
     
     # Input: Seleciona um dataset ----
-        selectInput(inputId = "est", label = "Estado:",
-                    choices = NULL),
+        selectInput(inputId = "est", label = "UF", choices = NULL),
         
-        selectInput("cid", "Cidade:",
-                    choices =  NULL),
+        selectInput("cid", "Município", choices =  NULL),
         
-        selectInput("clasTox", "Classificação Taxonômica:",
-                    choices = NULL), 
+        selectInput("clasTox", "Taxonomia", choices = NULL), 
         
-        sliderInput("data", "Ano da pesquisa", min = 1900, max = 2019
-                    , value = c(1900, 2019)),
+        sliderInput("data", "Ano", min = 1900, max = 2019, value = c(1900, 2019)),
         
-        sliderInput("profun", "Profundidade", min = 0, max = 400, value = c(0, 1000)),
+        sliderInput("profun", "Profundidade (cm)", min = 0, max = 400, value = c(0, 1000)),
         
         helpText("Por favor, clique no botão 'Atualizar' para atualizar sua pesquisa ")
         )
@@ -44,12 +40,12 @@ ui <- fluidPage(
   # main / tab-dados
     column(width = 9,
       tabsetPanel(id = 'maintabs',
-         tabPanel(title = tags$h3('Tabela'), value = 'priTab', tags$br(),
+         tabPanel(title = tags$h3('Localização'), value = 'priTab', tags$br(),
               tags$p(class = 'lead'),tags$hr(),
               DT::dataTableOutput("outDados")),
 
          
-         tabPanel(title = tags$h3('Segunda Tabela'), value = 'segTab', tags$br(),
+         tabPanel(title = tags$h3('Dados analíticos'), value = 'segTab', tags$br(),
               tags$p(class = 'lead'),tags$hr(),
               DT::dataTableOutput("outDadosSeg")),
          
@@ -85,17 +81,17 @@ ui <- fluidPage(
                    
    # Tab Download
                      
-         tabPanel(title = tags$h3('Download'), value = 'download',tags$br(),tags$hr(),
+         tabPanel(title = tags$h3('Descarregar'), value = 'download',tags$br(),tags$hr(),
             fluidRow(tags$br(),
               column(width = 6, offset = 3,
                 wellPanel(
                   tags$br(), 
-                  radioButtons('formato', h3('Escolha o formato do Download: '), tags$br(), 
-                    inline = TRUE, choices = c('CSV' = 1, 'txt', 'Doc')), 
+                  radioButtons('formato', h3('Escolha o formato do arquivo: '), tags$br(), 
+                    inline = TRUE, choices = c('CSV' = 1, 'TXT', 'Doc')), 
                     style = 'text-align:center',
                     tags$br(), 
                   downloadButton(outputId = 'download',
-                    label = 'Download', class = 'dlb'),
+                    label = 'Descarregar', class = 'dlb'),
                     tags$head(tags$style(".dlb{width: 100%;}"))
                 )
               )
@@ -113,47 +109,44 @@ server <- function(input, output, session) {
   
   observe({ 
     estados <- dados %>% select(estado_id)
-    updateSelectInput(session,"est","Estados",choices = c("Todos", unique(estados)))
+    updateSelectInput(session,"est", "UF", choices = c("Todos", unique(estados)))
   }) 
   
   observe({ 
     #x <- dados$Product.Sub.Category[product_list$Product.Category == input$mainproduct] 
     cidades <- dados %>% filter(colShow$estado_id == input$est) %>% select(municipio_id)
-    updateSelectInput(session,"cid","Cidade",choices = c("Todas", unique(cidades)))
+    updateSelectInput(session,"cid", "Município", choices = c("Todos", unique(cidades)))
   })
   
   observe({ 
-    if(input$cid != 'Todas'){
+    if(input$cid != 'Todos'){
       classificacao <- colShow %>% 
         filter((colShow$estado_id == input$est) & (colShow$municipio_id == input$cid )) %>% 
         select(taxon_sibcs) 
-      updateSelectInput(session,"clasTox","Classificação Taxonômica: ", 
-                        choices = c("Todas", unique(classificacao)))
+      updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     
       }else if(input$est == 'Todos'){
       classificacao <- colShow %>% select(taxon_sibcs) 
-      updateSelectInput(session,"clasTox","Classificação Taxonômica: ", 
-                        choices = c("Todas", unique(classificacao)))
+      updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     
       }else if(input$est != 'Todos'){
       classificacao <- colShow %>% 
         filter(colShow$estado_id == input$est) %>% 
-        select(taxon_sibcs) 
-      updateSelectInput(session,"clasTox","Classificação Taxonômica: ", 
-                        choices = c("Todas", unique(classificacao)))
+        select(taxon_sibcs)
+      updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     }
   })
   
   observe({
     profun_max <- as.numeric(dados$profund_sup) %>% range(na.rm = TRUE) %>%  max()
-    updateSliderInput(session,'profun', 'Profundidade', min = '0',
+    updateSliderInput(session, 'profun', 'Profundidade (cm)', min = '0',
                       max = profun_max, value = c(input$profun[1], input$profun[2]))
   })
   
   observe({
     year_range <- dados$observacao_data %>% lubridate::year() %>% range(na.rm = TRUE)
     updateSliderInput(
-      session, "data", "Ano da pesquisa", min = year_range[1], max = year_range[2],
+      session, "data", "Ano", min = year_range[1], max = year_range[2],
       value = c(input$data[1], input$data[2]))
   })
   
@@ -170,10 +163,19 @@ server <- function(input, output, session) {
                 (is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
                (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
     if(input$maintabs == 'segTab'){
-      colShow %>% select('terrafina', 'argila','silte', 'areia', 
-                         'carbono', 'ctc', 'ph') 
+      colShow %>% 
+        select(
+          'Terra fina' = terrafina, 
+          Argila = argila,
+          Silte = silte, 
+          Areia = areia,
+          Carbono = carbono,
+          CTC = ctc,
+          pH = ph,
+          CE = ce,
+          DSI = dsi)
     }else{
-      colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
+      colShow %>% select('dataset_id', 'observacao_data', 'coord_x', 'coord_y', 
                  'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
     }
   })
@@ -185,8 +187,17 @@ server <- function(input, output, session) {
         (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf)) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
       if(input$maintabs == 'segTab'){
-        colShow %>% select('terrafina', 'argila','silte', 'areia', 
-                           'carbono', 'ctc', 'ph') 
+        colShow %>% 
+          select(
+            'Terra fina' = terrafina, 
+            Argila = argila,
+            Silte = silte, 
+            Areia = areia,
+            Carbono = carbono,
+            CTC = ctc,
+            pH = ph,
+            CE = ce,
+            DSI = dsi)
       }else{
         colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
                            'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
@@ -200,8 +211,17 @@ server <- function(input, output, session) {
         (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
       if(input$maintabs == 'segTab'){
-        colShow %>% select('terrafina', 'argila','silte', 'areia', 
-                           'carbono', 'ctc', 'ph') 
+        colShow %>% 
+          select(
+            'Terra fina' = terrafina, 
+            Argila = argila,
+            Silte = silte, 
+            Areia = areia,
+            Carbono = carbono,
+            CTC = ctc,
+            pH = ph,
+            CE = ce,
+            DSI = dsi)
       }else{
         colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
                            'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
@@ -215,8 +235,17 @@ server <- function(input, output, session) {
          is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
          (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
       if(input$maintabs == 'segTab'){
-        colShow %>% select('terrafina', 'argila','silte', 'areia', 
-                           'carbono', 'ctc', 'ph') 
+        colShow %>% 
+          select(
+            'Terra fina' = terrafina, 
+            Argila = argila,
+            Silte = silte, 
+            Areia = areia,
+            Carbono = carbono,
+            CTC = ctc,
+            pH = ph,
+            CE = ce,
+            DSI = dsi) 
       }else{
         colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
                            'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
@@ -231,10 +260,19 @@ server <- function(input, output, session) {
           (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
       if(input$maintabs == 'segTab'){
-        colShow %>% select('terrafina', 'argila','silte', 'areia', 
-                           'carbono', 'ctc', 'ph') 
+        colShow %>% 
+          select(
+            'Terra fina' = terrafina, 
+            Argila = argila,
+            Silte = silte, 
+            Areia = areia,
+            Carbono = carbono,
+            CTC = ctc,
+            pH = ph,
+            CE = ce,
+            DSI = dsi)
       }else{
-        colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
+        colShow %>% select('dataset_id', 'observacao_data', 'coord_x', 'coord_y', 
                            'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
       }
   })
@@ -246,8 +284,17 @@ server <- function(input, output, session) {
           (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
     if(input$maintabs == 'segTab'){
-      colShow %>% select('terrafina', 'argila','silte', 'areia', 
-                         'carbono', 'ctc', 'ph') 
+      colShow %>% 
+        select(
+          'Terra fina' = terrafina, 
+          Argila = argila,
+          Silte = silte, 
+          Areia = areia,
+          Carbono = carbono,
+          CTC = ctc,
+          pH = ph,
+          CE = ce,
+          DSI = dsi)
     }else{
       colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
                          'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
@@ -258,21 +305,21 @@ server <- function(input, output, session) {
   
   #tableOutput "Dados"
   output$outDados <- DT::renderDataTable({
-    if(input$est == 'Todos' && input$clasTox == 'Todas'){
+    if(input$est == 'Todos' && input$clasTox == 'Todos'){
       DT::datatable(filtroTodos(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
       
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todas') && (input$cid == 'Todas'))){
+    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
       DT::datatable(filtroEst(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
       
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todas') && (input$cid != 'Todas'))){
+    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
       DT::datatable(filtroCid(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
       
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todas') && (input$cid == 'Todas'))){
+    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
       DT::datatable(filtroEstTax(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
       
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todas') && (input$cid != 'Todas'))){
+    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
       DT::datatable(filtroEstCidTax(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
-    }else if(((input$est == 'Todos') && (input$clasTox != 'Todas') && (input$cid == 'Todas'))){
+    }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
       DT::datatable(filtroTax(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
     }
   })
@@ -281,21 +328,21 @@ server <- function(input, output, session) {
   
   # tableoutput segDados
   output$outDadosSeg <- DT::renderDataTable({
-    if(input$est == 'Todos' && input$clasTox == 'Todas'){
+    if(input$est == 'Todos' && input$clasTox == 'Todos'){
       DT::datatable(filtroTodos(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
       
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todas') && (input$cid == 'Todas'))){
+    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
       DT::datatable(filtroEst(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
       
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todas') && (input$cid != 'Todas'))){
+    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
       DT::datatable(filtroCid(), options = list(lengthMenu =  c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
       
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todas') && (input$cid == 'Todas'))){
+    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
       DT::datatable(filtroEstTax(), options = list(lengthMenu =  c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
       
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todas') && (input$cid != 'Todas'))){
+    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
       DT::datatable(filtroEstCidTax(), options = list(lengthMenu =  c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
-    }else if(((input$est == 'Todos') && (input$clasTox != 'Todas') && (input$cid == 'Todas'))){
+    }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
       DT::datatable(filtroTax(), options = list(lengthMenu =  c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
     }
   })
@@ -310,7 +357,7 @@ server <- function(input, output, session) {
       baseGroups = c("Esri.WorldStreetMap", "CartoDB.Positron", "Esri.WorldImagery"),
       options = layersControlOptions(collapsed = TRUE)) 
     
-    if(input$est == 'Todos' && input$clasTox == 'Todas'){
+    if(input$est == 'Todos' && input$clasTox == 'Todos'){
         m %>%  
           addAwesomeMarkers(
             lng = as.numeric(na.omit(filtroTodos()$coord_x)),
@@ -318,7 +365,7 @@ server <- function(input, output, session) {
             icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
             clusterOptions = markerClusterOptions(),
             label = filtroTodos()$observacao_id)
-      }else if(((input$est != 'Todos') && (input$clasTox == 'Todas') && (input$cid == 'Todas'))){
+      }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
         m %>%
           addAwesomeMarkers(
             lng = as.numeric(na.omit(sub(',','.',filtroEst()$coord_x))),
@@ -327,7 +374,7 @@ server <- function(input, output, session) {
             clusterOptions = markerClusterOptions(),
             label = filtroEst()$observacao_id)
             
-       }else if(((input$est != 'Todos') && (input$clasTox == 'Todas') && (input$cid != 'Todas'))){
+       }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
          m %>%
            addAwesomeMarkers(
              lng = as.numeric(na.omit(sub(',','.',filtroCid()$coord_x))),
@@ -336,7 +383,7 @@ server <- function(input, output, session) {
              clusterOptions = markerClusterOptions(),
              label = filtroCid()$observacao_id)
       
-       }else if(((input$est != 'Todos') && (input$clasTox != 'Todas') && (input$cid == 'Todas'))){
+       }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
          m %>%
            addAwesomeMarkers(
              lng = as.numeric(na.omit(sub(',','.',filtroEstTax()$coord_x))),
@@ -345,7 +392,7 @@ server <- function(input, output, session) {
              clusterOptions = markerClusterOptions(),
              label = filtroEstTax()$observacao_id)
        
-        }else if(((input$est != 'Todos') && (input$clasTox != 'Todas') && (input$cid != 'Todas'))){
+        }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
           m %>%
             addAwesomeMarkers(
               lng = as.numeric(na.omit(sub(',','.',filtroEstCidTax()$coord_x))),
@@ -353,7 +400,7 @@ server <- function(input, output, session) {
               icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
               clusterOptions = markerClusterOptions(),
               label = filtroEstCidTax()$observacao_id)
-       }else if(((input$est == 'Todos') && (input$clasTox != 'Todas') && (input$cid == 'Todas'))){
+       }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
          m %>%
            addAwesomeMarkers(
              lng = as.numeric(na.omit(sub(',','.',filtroTax()$coord_x))),
@@ -375,7 +422,7 @@ server <- function(input, output, session) {
   
   fileExt <- reactive({
     switch (input$formato,
-      'CSV' = '.csv', 'txt' = '.txt', 'Doc' = '.doc')
+      'CSV' = '.csv', 'TXT' = '.txt', 'Doc' = '.doc')
   })
   
   output$download <- downloadHandler(
@@ -384,21 +431,21 @@ server <- function(input, output, session) {
     },
     
     content = function(file){
-      if(input$est == 'Todos' & input$clasTox == 'Todas'){
+      if(input$est == 'Todos' & input$clasTox == 'Todos'){
         write.table(filtroTodos(),file, sep = ';', row.names = FALSE)
       
-        }else if(((input$est != 'Todos') && (input$clasTox == 'Todas') && (input$cid == 'Todas'))){
+        }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
           write.table(filtroEst(),file, sep = ';', row.names = FALSE)
 
-        }else if(((input$est != 'Todos') && (input$clasTox == 'Todas') && (input$cid != 'Todas'))){
+        }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
           write.table(filtroCid(),file, sep = ';', row.names = FALSE)
 
-        }else if(((input$est != 'Todos') && (input$clasTox != 'Todas') && (input$cid == 'Todas'))){
+        }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
           write.table(filtroEstTax(),file, sep = ';', row.names = FALSE)
 
-        }else if(((input$est != 'Todos') && (input$clasTox != 'Todas') && (input$cid != 'Todas'))){
+        }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
           write.table(filtroEstCidTax(),file, sep = ';', row.names = FALSE)
-        }else if(((input$est == 'Todos') && (input$clasTox != 'Todas') && (input$cid == 'Todas'))){
+        }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
           write.table(filtroTax(),file, sep = ';', row.names = FALSE)
        }
     }
