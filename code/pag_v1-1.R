@@ -1,6 +1,6 @@
 library(shiny)
 library(DT)
-library (RCurl)
+library(RCurl)
 library(dplyr)
 library(lubridate) 
 library(leaflet)
