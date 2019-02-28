@@ -302,7 +302,7 @@ server <- function(input, output, session) {
   
   output$outMapa <- renderLeaflet({
     m <- leaflet() %>%
-      setView(lng = -50.8663589, lat = -12.9214564, zoom = 4) %>%
+      # setView(lng = -50.8663589, lat = -12.9214564, zoom = 4) %>%
       addProviderTiles("Esri.WorldStreetMap", group = "Esri.WorldStreetMap") %>% 
       addProviderTiles("CartoDB.Positron", group = "CartoDB.Positron") %>% 
       addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
