@@ -6,6 +6,7 @@ library(lubridate)
 library(leaflet)
 library(stringr)
 
+Sys.setlocale(category = "LC_TIME", locale = "Portuguese_Brazil.1252")
 download <- getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.csv")
 dados <- read.csv(text = download, sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
 profun_max <- as.numeric(dados$profund_sup) %>% range(na.rm = TRUE) %>%  max()
@@ -26,11 +27,9 @@ ui <- fluidPage(
         
         selectInput("clasTox", "Taxonomia", choices = NULL), 
         
-        sliderInput("data", "Ano", min = 1900, max = 2019, value = c(1900, 2019)),
+        sliderInput("data", "Ano", min = 1900, max = 2019, value = c(1900, 2019), sep=''),
         
-        sliderInput("profun", "Profundidade (cm)", min = 0, max = profun_max, value = c(0, profun_max)),
-        
-        helpText("Por favor, clique no botão 'Atualizar' para atualizar sua pesquisa ")
+        sliderInput("profun", "Profundidade (cm)", sep = '', min = 0, max = profun_max, value = c(0, profun_max))
         )
     ),
   
@@ -85,7 +84,7 @@ ui <- fluidPage(
                 wellPanel(
                   tags$br(), 
                   radioButtons('formato', h3('Escolha o formato do arquivo: '), tags$br(), 
-                    inline = TRUE, choices = c('CSV' = 1, 'TXT', 'Doc')), 
+                    inline = TRUE, choices = c('CSV' , 'TXT', 'TSV')), 
                     style = 'text-align:center',
                     tags$br(), 
                   downloadButton(outputId = 'download',
@@ -106,12 +105,14 @@ server <- function(input, output, session) {
   ### UpdateInputs
   
   observe({ 
-    estados <- dados %>% select(estado_id)
+    estados <- dados %>% arrange(dados$estado_id) %>% select(estado_id) 
     updateSelectInput(session,"est", "UF", choices = c("Todos", unique(estados)))
   }) 
   
   observe({ 
-    cidades <- dados %>% filter(dados$estado_id == input$est) %>% select(municipio_id)
+    cidades <- dados %>% filter(dados$estado_id == input$est) %>% 
+               select(municipio_id) %>% arrange(-desc(municipio_id))
+    
     updateSelectInput(session,"cid", "Município", choices = c("Todos", unique(cidades)))
   })
   
@@ -119,17 +120,17 @@ server <- function(input, output, session) {
     if(input$cid != 'Todos'){
       classificacao <- dados %>% 
         filter((dados$estado_id == input$est) & (dados$municipio_id == input$cid )) %>% 
-        select(taxon_sibcs) 
+        select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
       updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     
       }else if(input$est == 'Todos'){
-      classificacao <- dados %>% select(taxon_sibcs) 
+      classificacao <- dados %>% select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
       updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     
       }else if(input$est != 'Todos'){
       classificacao <- dados %>% 
         filter(dados$estado_id == input$est) %>% 
-        select(taxon_sibcs)
+        select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
       updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     }
   })
@@ -140,10 +141,10 @@ server <- function(input, output, session) {
   })
   
   observe({
-    year_range <- dados$observacao_data %>% lubridate::year() %>% range(na.rm = TRUE)
+    year_range <- dados$observacao_data %>% lubridate::year() %>% range(na.rm = TRUE) 
     updateSliderInput(
       session, "data", "Ano", min = year_range[1], max = year_range[2],
-      value = c(input$data[1], input$data[2]))
+      value = c(input$data[1], input$data[2]) )
   })
   
   
@@ -260,21 +261,34 @@ server <- function(input, output, session) {
   #tableOutput "Dados"
   output$outDados <- DT::renderDataTable({
     if(input$est == 'Todos' && input$clasTox == 'Todos'){
-      DT::datatable(filtroTodos(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroTodos(),
+            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
       
     }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroEst(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroEst(), 
+            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
       
     }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
-      DT::datatable(filtroCid(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroCid(),
+            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))        
       
     }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroEstTax(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
-      
+      DT::datatable(filtroEstTax(),
+            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
+    
     }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
-      DT::datatable(filtroEstCidTax(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroEstCidTax(), 
+            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
+    
     }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroTax(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroTax(),
+            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
     }
   })
   
@@ -283,21 +297,34 @@ server <- function(input, output, session) {
   # tableoutput segDados
   output$outDadosSeg <- DT::renderDataTable({
     if(input$est == 'Todos' && input$clasTox == 'Todos'){
-      DT::datatable(filtroTodos(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroTodos(),
+          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
       
     }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroEst(), options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroEst(), 
+          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
       
     }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
-      DT::datatable(filtroCid(), options = list(lengthMenu =  c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroCid(),
+          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))        
       
     }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroEstTax(), options = list(lengthMenu =  c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
-      
+      DT::datatable(filtroEstTax(),
+          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
+    
     }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
-      DT::datatable(filtroEstCidTax(), options = list(lengthMenu =  c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroEstCidTax(), 
+          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
+    
     }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroTax(), options = list(lengthMenu =  c(5, 10, 30, 50), pageLength = 5), rownames = FALSE)
+      DT::datatable(filtroTax(),
+          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
     }
   })
   
@@ -371,20 +398,23 @@ server <- function(input, output, session) {
   # Download
   
   observe({
-    updateRadioButtons(session,'formato', selected = 1)
+    updateRadioButtons(session,'formato', selected = 'CSV')
   })
   
   fileExt <- reactive({
     switch (input$formato,
-      'CSV' = '.csv', 'TXT' = '.txt', 'Doc' = '.doc')
+      'CSV' = 'csv', 'TXT' = 'txt', 'TSV' = 'txt')
   })
   
   output$download <- downloadHandler(
     filename = function(){
-        paste('Dados-febr-',Sys.Date(), fileExt(), sep = '')
+        paste('Dados-febr-',Sys.Date(), fileExt(), sep = '.')
     },
     
     content = function(file){
+        #sep1 <- switch (input$formato, 'CSV' = ',', 'TSV' = '\t', "TXT" = ';')
+          
+        
         if(input$est == 'Todos' & input$clasTox == 'Todos'){
           write.table(filtroTodos(),file, sep = ';', row.names = FALSE)
       
