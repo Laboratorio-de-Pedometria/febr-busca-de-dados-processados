@@ -8,15 +8,13 @@ library(stringr)
 
 download <- getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.csv")
 dados <- read.csv(text = download, sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
-# estadoTipo <- unique(dados$estado_id)
-colShow <- dados
+profun_max <- as.numeric(dados$profund_sup) %>% range(na.rm = TRUE) %>%  max()
 
 
 ui <- fluidPage(
-  titlePanel(a(href = 'http://coral.ufsm.br/febr/', img(src = 'logo.PNG'))), 
-  tags$hr(),
-  
-  
+  titlePanel(a(href = 'http://coral.ufsm.br/febr/', 
+               img(src = '../../../../../img/logo.png')), 'febr'),         
+  tags$hr(),  
   fluidRow(
     column(2,
       wellPanel(
@@ -30,7 +28,7 @@ ui <- fluidPage(
         
         sliderInput("data", "Ano", min = 1900, max = 2019, value = c(1900, 2019)),
         
-        sliderInput("profun", "Profundidade (cm)", min = 0, max = 400, value = c(0, 1000)),
+        sliderInput("profun", "Profundidade (cm)", min = 0, max = profun_max, value = c(0, profun_max)),
         
         helpText("Por favor, clique no botão 'Atualizar' para atualizar sua pesquisa ")
         )
@@ -113,32 +111,30 @@ server <- function(input, output, session) {
   }) 
   
   observe({ 
-    #x <- dados$Product.Sub.Category[product_list$Product.Category == input$mainproduct] 
-    cidades <- dados %>% filter(colShow$estado_id == input$est) %>% select(municipio_id)
+    cidades <- dados %>% filter(dados$estado_id == input$est) %>% select(municipio_id)
     updateSelectInput(session,"cid", "Município", choices = c("Todos", unique(cidades)))
   })
   
   observe({ 
     if(input$cid != 'Todos'){
-      classificacao <- colShow %>% 
-        filter((colShow$estado_id == input$est) & (colShow$municipio_id == input$cid )) %>% 
+      classificacao <- dados %>% 
+        filter((dados$estado_id == input$est) & (dados$municipio_id == input$cid )) %>% 
         select(taxon_sibcs) 
       updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     
       }else if(input$est == 'Todos'){
-      classificacao <- colShow %>% select(taxon_sibcs) 
+      classificacao <- dados %>% select(taxon_sibcs) 
       updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     
       }else if(input$est != 'Todos'){
-      classificacao <- colShow %>% 
-        filter(colShow$estado_id == input$est) %>% 
+      classificacao <- dados %>% 
+        filter(dados$estado_id == input$est) %>% 
         select(taxon_sibcs)
       updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     }
   })
   
   observe({
-    profun_max <- as.numeric(dados$profund_sup) %>% range(na.rm = TRUE) %>%  max()
     updateSliderInput(session, 'profun', 'Profundidade (cm)', min = '0',
                       max = profun_max, value = c(input$profun[1], input$profun[2]))
   })
@@ -157,146 +153,104 @@ server <- function(input, output, session) {
   # Apresentação da tabela e filtragem
   
   filtroTodos <- reactive({
-    colShow <- dados %>% 
+    dados <- dados %>% 
       filter((((profund_sup %in% input$profun[1]:input$profun[2]) & 
                  (profund_inf %in% input$profun[1]:input$profun[2])) |
                 (is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
                (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
     if(input$maintabs == 'segTab'){
-      colShow %>% 
+      dados %>% 
         select(
-          'Terra fina' = terrafina, 
-          Argila = argila,
-          Silte = silte, 
-          Areia = areia,
-          Carbono = carbono,
-          CTC = ctc,
-          pH = ph,
-          CE = ce,
-          DSI = dsi)
+          'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
+           Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
     }else{
-      colShow %>% select('dataset_id', 'observacao_data', 'coord_x', 'coord_y', 
+      dados %>% select('dataset_id', 'observacao_data', 'coord_x', 'coord_y', 
                  'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
     }
   })
   
   filtroEst <- reactive({
-    colShow <- dados %>%
-    filter((colShow$estado_id == input$est) & 
+    dados <- dados %>%
+    filter((dados$estado_id == input$est) & 
         ((profund_sup %in% input$profun[1]:input$profun[2]) & 
         (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf)) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
       if(input$maintabs == 'segTab'){
-        colShow %>% 
+        dados %>% 
           select(
-            'Terra fina' = terrafina, 
-            Argila = argila,
-            Silte = silte, 
-            Areia = areia,
-            Carbono = carbono,
-            CTC = ctc,
-            pH = ph,
-            CE = ce,
-            DSI = dsi)
+            'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
+            Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
       }else{
-        colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
+        dados %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
                            'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
       }
   })
   
   filtroCid <- reactive({
-    colShow <- dados %>% 
-    filter((colShow$municipio_id == input$cid) & (colShow$estado_id == input$est) &
+    dados <- dados %>% 
+    filter((dados$municipio_id == input$cid) & (dados$estado_id == input$est) &
         (((profund_sup %in% input$profun[1]:input$profun[2]) & 
         (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
       if(input$maintabs == 'segTab'){
-        colShow %>% 
+        dados %>% 
           select(
-            'Terra fina' = terrafina, 
-            Argila = argila,
-            Silte = silte, 
-            Areia = areia,
-            Carbono = carbono,
-            CTC = ctc,
-            pH = ph,
-            CE = ce,
-            DSI = dsi)
+            'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
+            Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
       }else{
-        colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
+        dados %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
                            'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
       }
   })
   
   filtroEstTax <- reactive({
-    colShow <- dados %>% filter(input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs 
+    dados <- dados %>% filter(input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs 
          & (((profund_sup %in% input$profun[1]:input$profun[2]) & 
          (profund_inf %in% input$profun[1]:input$profun[2]) |
          is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
          (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
       if(input$maintabs == 'segTab'){
-        colShow %>% 
+        dados %>% 
           select(
-            'Terra fina' = terrafina, 
-            Argila = argila,
-            Silte = silte, 
-            Areia = areia,
-            Carbono = carbono,
-            CTC = ctc,
-            pH = ph,
-            CE = ce,
-            DSI = dsi) 
+            'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
+            Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
       }else{
-        colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
+        dados %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
                            'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
       }
   })
   
   filtroEstCidTax <- reactive({
-    colShow <- dados %>%    
+    dados <- dados %>%    
     filter(input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs &
-          colShow$municipio_id == input$cid &
+          dados$municipio_id == input$cid &
           (((profund_sup %in% input$profun[1]:input$profun[2]) & 
           (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
       if(input$maintabs == 'segTab'){
-        colShow %>% 
+        dados %>% 
           select(
-            'Terra fina' = terrafina, 
-            Argila = argila,
-            Silte = silte, 
-            Areia = areia,
-            Carbono = carbono,
-            CTC = ctc,
-            pH = ph,
-            CE = ce,
-            DSI = dsi)
+            'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
+             Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
       }else{
-        colShow %>% select('dataset_id', 'observacao_data', 'coord_x', 'coord_y', 
+        dados %>% select('dataset_id', 'observacao_data', 'coord_x', 'coord_y', 
                            'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
       }
   })
   
   filtroTax <- reactive({
-    colShow <- dados %>%    
+    dados <- dados %>%    
     filter((input$clasTox == dados$taxon_sibcs) &
           (((profund_sup %in% input$profun[1]:input$profun[2]) & 
           (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
     if(input$maintabs == 'segTab'){
-      colShow %>% 
+      dados %>% 
         select(
-          'Terra fina' = terrafina, 
-          Argila = argila,
-          Silte = silte, 
-          Areia = areia,
-          Carbono = carbono,
-          CTC = ctc,
-          pH = ph,
-          CE = ce,
-          DSI = dsi)
+          'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
+           Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
     }else{
-      colShow %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
+      dados %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
                          'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
     }
   })
@@ -431,8 +385,8 @@ server <- function(input, output, session) {
     },
     
     content = function(file){
-      if(input$est == 'Todos' & input$clasTox == 'Todos'){
-        write.table(filtroTodos(),file, sep = ';', row.names = FALSE)
+        if(input$est == 'Todos' & input$clasTox == 'Todos'){
+          write.table(filtroTodos(),file, sep = ';', row.names = FALSE)
       
         }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
           write.table(filtroEst(),file, sep = ';', row.names = FALSE)
@@ -445,6 +399,7 @@ server <- function(input, output, session) {
 
         }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
           write.table(filtroEstCidTax(),file, sep = ';', row.names = FALSE)
+        
         }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
           write.table(filtroTax(),file, sep = ';', row.names = FALSE)
        }
