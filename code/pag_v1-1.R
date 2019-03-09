@@ -7,9 +7,10 @@ library(leaflet)
 library(stringr)
 
 Sys.setlocale(category = "LC_TIME", locale = "Portuguese_Brazil.1252")
-download <- getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.csv")
-dados <- read.csv(text = download, sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
-profun_max <- as.numeric(dados$profund_sup) %>% range(na.rm = TRUE) %>%  max()
+dados <- 
+  getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.csv") %>% 
+  read.csv(text = ., sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
+profun_max <- dados$profund_inf %>% max(na.rm = TRUE)
 
 
 ui <- fluidPage(
@@ -152,6 +153,9 @@ server <- function(input, output, session) {
   
   
   # Apresentação da tabela e filtragem
+  vars_localizacao <- 
+    c('dataset_id', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'profund_sup', 'profund_inf', 
+      'taxon_sibcs', 'municipio_id', 'estado_id')
   
   filtroTodos <- reactive({
     dados <- dados %>% 
@@ -163,10 +167,9 @@ server <- function(input, output, session) {
       dados %>% 
         select(
           'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
-           Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
+           Carbono = carbono, CTC = ctc, pH = ph, CE = ce, DSI = dsi)
     }else{
-      dados %>% select('dataset_id', 'observacao_data', 'coord_x', 'coord_y', 
-                 'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
+      dados %>% select(vars_localizacao) 
     }
   })
   
@@ -182,8 +185,7 @@ server <- function(input, output, session) {
             'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
             Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
       }else{
-        dados %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
-                           'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
+        dados %>% select(vars_localizacao)
       }
   })
   
@@ -199,8 +201,7 @@ server <- function(input, output, session) {
             'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
             Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
       }else{
-        dados %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
-                           'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
+        dados %>% select(vars_localizacao)
       }
   })
   
@@ -216,8 +217,7 @@ server <- function(input, output, session) {
             'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
             Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
       }else{
-        dados %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
-                           'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
+        dados %>% select(vars_localizacao)
       }
   })
   
@@ -234,8 +234,7 @@ server <- function(input, output, session) {
             'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
              Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
       }else{
-        dados %>% select('dataset_id', 'observacao_data', 'coord_x', 'coord_y', 
-                           'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
+        dados %>% select(vars_localizacao)
       }
   })
   
@@ -251,8 +250,7 @@ server <- function(input, output, session) {
           'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
            Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
     }else{
-      dados %>% select('dataset_id', 'observacao_data','coord_x', 'coord_y', 
-                         'profund_sup', 'profund_inf', 'taxon_sibcs', 'municipio_id', 'estado_id') 
+      dados %>% select(vars_localizacao)
     }
   })
   
