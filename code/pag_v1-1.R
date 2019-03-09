@@ -14,8 +14,7 @@ profun_max <- dados$profund_inf %>% max(na.rm = TRUE)
 
 
 ui <- fluidPage(
-  titlePanel(a(href = 'http://coral.ufsm.br/febr/', 
-               img(src = '../../../../../img/logo.png')), 'febr'),         
+  titlePanel(a(href = 'http://coral.ufsm.br/febr/', img(src = 'logo.png')), 'febr'),
   tags$hr(),  
   fluidRow(
     column(2,
@@ -347,8 +346,8 @@ server <- function(input, output, session) {
       }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
         m %>%
           addAwesomeMarkers(
-            lng = as.numeric(na.omit(sub(',','.',filtroEst()$coord_x))),
-            lat = as.numeric(na.omit(sub(',','.',filtroEst()$coord_y))),
+            lng = as.numeric(na.omit(sub(',', '.', filtroEst()$coord_x))),
+            lat = as.numeric(na.omit(sub(',', '.', filtroEst()$coord_y))),
             icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
             clusterOptions = markerClusterOptions(),
             label = filtroEst()$observacao_id)
@@ -406,7 +405,7 @@ server <- function(input, output, session) {
   
   output$download <- downloadHandler(
     filename = function(){
-        paste('Dados-febr-',Sys.Date(), fileExt(), sep = '.')
+        paste('dados-febr-', Sys.Date(), ".", fileExt(), sep = '')
     },
     
     content = function(file){
