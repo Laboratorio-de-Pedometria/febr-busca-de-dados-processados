@@ -8,8 +8,8 @@ library(stringr)
 
 Sys.setlocale(category = "LC_TIME", locale = "Portuguese_Brazil.1252")
 dados <- 
-  getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.csv") %>% 
-  read.csv(text = ., sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
+  getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.txt") %>% 
+  read.table(text = ., sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
 profun_max <- dados$profund_inf %>% max(na.rm = TRUE)
 
 
