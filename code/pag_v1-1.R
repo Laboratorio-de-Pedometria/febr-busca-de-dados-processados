@@ -1,17 +1,75 @@
+# Bibliotecas -------------------------------------------------------------
+
 library(shiny)
 library(DT)
 library(RCurl)
 library(dplyr)
 library(lubridate) 
 library(leaflet)
+library(leaflet.extras)
 library(stringr)
+#library(glue)
+#library(rgdal)
+#library(sp)
+#library(mapview)
 
-Sys.setlocale(category = "LC_TIME", locale = "Portuguese_Brazil.1252")
-dados <- 
-  getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.txt") %>% 
-  read.table(text = ., sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
-profun_max <- dados$profund_inf %>% max(na.rm = TRUE)
+# Definicoes ----------------------------------------
+  
+  #Separador decimal
+  sep_dec <- ','
+  
+  #Separador de colunas 
+  sep_col <- '\t'
+  
+# Descarregamento dos dados -------------------------
+  
+#Variavel que esta recebendo direto do github febr-team, o superconjunto.txt
+  dados <- 
+    getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.txt") %>% 
+    read.table(text = ., sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
+    
 
+# Definindo Variaveis ------------------------
+  
+  #Variavel para apresentacao da tabela localizacao
+  vars_localizacao <- c('dataset_id' = 'dataset_id_ap', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y',
+                        'taxon_sibcs', 'municipio_id', 'estado_id') 
+    
+  #variavel para apresentacao da tabela analitica
+  # função sym: EXPLICAR ESTRETÉGIA USADA PARA RENOMEAR COLUNAS
+  vars_analiticas <- c('dataset_id' = sym('dataset_id_ap'), 'observacao_id', 'profund_sup', 'profund_inf',
+                       list('Terra fina' = sym('terrafina'), Argila = sym('argila'), Silte = sym('silte'),
+                            Areia = sym('areia'), Carbono = sym('carbono'), CTC = sym('ctc'), 
+                            pH = sym('ph'), CE = sym('ce'), DSI = sym('dsi')))
+  
+  #Variavel para fazer o descarregamento
+  vars_download <- c('dataset_id','observacao_id','sisb_id','ibge_id','observacao_data',
+                     'coord_x','coord_y','coord_precisao','coord_fonte','pais_id','estado_id',
+                     'municipio_id','amostra_tipo','amostra_quanti', 'amostra_area','taxon_sibcs',
+                     'taxon_st','taxon_wrb','camada_id', 'amostra_id','camada_nome','profund_sup',
+                     'profund_inf', 'terrafina', 'argila', 'silte', 'areia', 'carbono', 'ctc',
+                     'ph', 'dsi','ce')
+  
+  #Criando nova coluna para receber o dataset_id como link e apresentar no popup como 'mais informacoes'
+  dados$dataset_link <- 
+    paste0("<a href=http://coral.ufsm.br/febr/catalog/", 
+           dados$dataset_id," target='_blank'> ", 'Mais informações?',"</a>")
+  
+  #Criando nova coluna para apresentacao do label no mapa
+  dados$labelMap <- 
+    paste0(dados$observacao_id, '@', dados$dataset_id)
+  
+  #Criando nova coluna para apresentar o dataset_id como link e nao modificar o dataset_id original
+  dados$dataset_id_ap <-
+    paste0("<a href=http://coral.ufsm.br/febr/catalog/", 
+        dados$dataset_id," target='_blank'> ", dados$dataset_id,"</a>")
+  
+  #Variavel para receber o valor maximo da profundidade
+  profun_max <- dados$profund_inf %>% max(na.rm = TRUE)
+  
+  #variavel para acessar avaliação 
+  link_avaliacao <- c('https://forms.gle/ZxeeiHF487JR5hm57')
+# Inicio -------------------------------------------------
 
 ui <- fluidPage(
   titlePanel(a(href = 'http://coral.ufsm.br/febr/', img(src = 'logo.png')), 'febr'),
@@ -19,8 +77,6 @@ ui <- fluidPage(
   fluidRow(
     column(2,
       wellPanel(
-    
-    # Input: Seleciona um dataset ----
         selectInput(inputId = "est", label = "UF", choices = NULL),
         
         selectInput("cid", "Município", choices =  NULL),
@@ -37,63 +93,59 @@ ui <- fluidPage(
   # main / tab-dados
     column(width = 9,
       tabsetPanel(id = 'maintabs',
+         
+         #Primeira aba "Localizaocao"          
          tabPanel(title = tags$h3('Localização'), value = 'priTab', tags$br(),
               tags$p(class = 'lead'),tags$hr(),
               DT::dataTableOutput("outDados")),
 
-         
+         #Segunda aba "Dados analiticos"
          tabPanel(title = tags$h3('Dados analíticos'), value = 'segTab', tags$br(),
               tags$p(class = 'lead'),tags$hr(),
               DT::dataTableOutput("outDadosSeg")),
          
              
    # output mapa
+          # Terceira aba "Mapa"
           tabPanel(title = tags$h3('Mapa'), value = 'map',
-              fluidRow(tags$br(), tags$hr(),
+              fluidRow(
+                column(12,
+                  tags$br(), tags$hr(),  
                   leafletOutput('outMapa', width = '100%', height = '600'),
-                   tags$br() )),
-      
-
-   # Ajuda
-        # 
-        # tabPanel(title = tags$h3('Ajuda'), value = 'ajuda',tags$br(),tags$hr(),
-        #   fluidRow(tags$br(),
-        #     column(width = 6,
-        #       wellPanel(tags$h4('Estado'),p("Exemplo",
-        #         style = 'color:#A9A9A9; font-weight: bold;')
-        #       ), 
-        #  
-        #       wellPanel(tags$h4('Ajuda 2'),tags$p('Exemplo 2',
-        #         style = 'color:#A9A9A9; font-weight: bold;'))),
-        #  
-        #     column(width = 6, 
-        #       wellPanel(tags$h4('Ajuda 3'), 
-        #         tags$p('Control the degree of smoothing. Default is 0.1.',
-        #         style = 'color:#A9A9A9; font-weight: bold;')
-        #       ),
-        #       
-        #        wellPanel(tags$h4('Output Limits'), 
-        #           tags$p('Set limits on spline output values. Defaults are 0, 1000.')
-        #         )))),
-                   
+                  actionButton("reset_button", "Ver tudo"),
+                  tags$style("#reset_button {float:left; margin-top:-45px;
+                             margin-left:20px; position:relative;}"), tags$br()))),
+   
    # Tab Download
-                     
-         tabPanel(title = tags$h3('Descarregar'), value = 'download',tags$br(),tags$hr(),
-            fluidRow(tags$br(),
-              column(width = 6, offset = 3,
-                wellPanel(
-                  tags$br(), 
-                  radioButtons('formato', h3('Escolha o formato do arquivo: '), tags$br(), 
-                    inline = TRUE, choices = c('CSV' , 'TXT', 'TSV')), 
-                    style = 'text-align:center',
+           # Quarta aba "Descarregar"             
+           tabPanel(title = tags$h3('Descarregar'), value = 'download', tags$br(), tags$hr(),
+              fluidRow(tags$br(),
+                column(width = 6, offset = 3,
+                  wellPanel(
                     tags$br(), 
-                  downloadButton(outputId = 'download',
-                    label = 'Descarregar', class = 'dlb'),
-                    tags$head(tags$style(".dlb{width: 100%;}"))
-                )
-              )
-            )
-          ) 
+                    h3('Clique no botão abaixo para descarregar os dados: '), tags$br(), 
+                    # radioButtons('formato', h3('Clique no botão para descarregar os dados: '), tags$br(), 
+                    #   inline = TRUE, choices = c('TXT')), 
+                      style = 'text-align:center',
+                      tags$br(), 
+                    downloadButton(outputId = 'download',
+                      label = 'Descarregar', class = 'dlb'),
+                      tags$head(tags$style(".dlb{width: 100%;}"))
+                    )
+                  )
+               )
+            ),
+            
+            tabPanel(title = tags$h3('Avalie'), value = 'avaliacao', tags$br(),
+               fluidRow(
+                  column(8, offset = 2,
+                    wellPanel( tags$br(), 
+                        h3('Olá, tudo bem ?'), tags$br(),
+                        p('Obrigado por ultilizar nosso nova ferramenta de busca e visualização.', br(), 
+                           'Neste período de testes pedimos para que você nos dê sugestões para 
+                           melhorarmos esta ferramenta. Para poder avaliar, clique ', a(href = link_avaliacao, 'aqui.'), br(),
+                          'Muito obrigado!'),
+                        tags$br() ))))
         )
       )  
     )
@@ -102,44 +154,93 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
-  ### UpdateInputs
+  # Funções auxiliares ------------------------------------------------------
   
+  #Função para apresentação das tabelas
+  dataTables <-
+    function (x) {
+      if(input$maintabs == 'priTab'){
+        x %>%
+          DT::datatable(
+          filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
+          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+                         language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'))) %>%
+          # Função para alterar separador decimal
+          formatCurrency(., c('coord_x', 'coord_y'), currency = "", digits = 8, dec.mark = ',')
+      }else if(input$maintabs == 'segTab'){
+        x %>%
+          DT::datatable(
+          filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
+          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+                         language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'))) %>%
+           formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'),
+                          currency = "", digits = 1, dec.mark = ',')
+      }
+    }
+  
+  # funcao para adicionar marcadores no mapa
+  marks <-
+    function(x,y){
+      x %>%
+        addAwesomeMarkers(
+          lng = as.numeric(na.omit(y$coord_x)),
+          lat = as.numeric(na.omit(y$coord_y)),
+          icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
+          clusterOptions = markerClusterOptions(),
+          popup = y$dataset_link,
+          label = y$labelMap)
+    }
+  
+  ### UpdateInputs ---------------------------------------------------------
+   
+  # funcao reativa para atualizao o selectInput do estado e ordenar alfabeticamente
   observe({ 
-    estados <- dados %>% arrange(dados$estado_id) %>% select(estado_id) 
-    updateSelectInput(session,"est", "UF", choices = c("Todos", unique(estados)))
+    estados <- 
+      dados %>%
+      arrange(dados$estado_id) %>%
+      select(estado_id)
+    updateSelectInput(session, "est", "UF", choices = c("Todos", unique(estados)))
   }) 
   
+  # funcao reativa para atualizao o selectInput da cidade para apresentar 
+  # somente as cidades do estado dentro do superconjunto e ordenar alfabeticamente
   observe({ 
-    cidades <- dados %>% filter(dados$estado_id == input$est) %>% 
-               select(municipio_id) %>% arrange(-desc(municipio_id))
-    
-    updateSelectInput(session,"cid", "Município", choices = c("Todos", unique(cidades)))
+    cidades <- 
+      dados %>% 
+      filter(dados$estado_id == input$est) %>% 
+      select(municipio_id) %>% 
+      arrange(-desc(municipio_id))
+    updateSelectInput(session, "cid", "Município", choices = c("Todos", unique(cidades)))
   })
   
+  # funcao reativa para atualizao o selectInput da classificacao taxonomica apresentando
+  # somente as taxonomia que tem no estado ou cidade selecionado e ordenar alfabeticamente 
   observe({ 
     if(input$cid != 'Todos'){
       classificacao <- dados %>% 
         filter((dados$estado_id == input$est) & (dados$municipio_id == input$cid )) %>% 
         select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
-      updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
+      updateSelectInput(session, "clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     
-      }else if(input$est == 'Todos'){
+    }else if(input$est == 'Todos'){
       classificacao <- dados %>% select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
-      updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
+      updateSelectInput(session, "clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     
-      }else if(input$est != 'Todos'){
+    }else if(input$est != 'Todos'){
       classificacao <- dados %>% 
         filter(dados$estado_id == input$est) %>% 
         select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
-      updateSelectInput(session,"clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
+      updateSelectInput(session, "clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     }
   })
   
+  # Atualizar a profundida maxima
   observe({
     updateSliderInput(session, 'profun', 'Profundidade (cm)', min = '0',
                       max = profun_max, value = c(input$profun[1], input$profun[2]))
   })
   
+  # Atualizar o ano minimo e maximo  
   observe({
     year_range <- dados$observacao_data %>% lubridate::year() %>% range(na.rm = TRUE) 
     updateSliderInput(
@@ -147,78 +248,135 @@ server <- function(input, output, session) {
       value = c(input$data[1], input$data[2]) )
   })
   
+  # Update do botao do mapa "home button"
+  observe({
+    input$reset_button
+    leafletProxy("outMapa") %>% setView(lng = -50.8663589, lat = -12.9214564, zoom = 4)
+  })
   
-  #----------------------------------------------------------------------------------------
+  # Update do Download 
+  # observe({
+  #   updateRadioButtons(session,'formato', selected = 'TXT')
+  # })
   
+  # filtragem -------------------------------------------------------------------
   
-  # Apresentação da tabela e filtragem
-  vars_localizacao <- 
-    c('dataset_id', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'profund_sup', 'profund_inf', 
-      'taxon_sibcs', 'municipio_id', 'estado_id')
-  
+  # filtroTodos, ,ultilizado quando o usuario nao altera os estado, cidade e taxonomia
   filtroTodos <- reactive({
-    dados <- dados %>% 
-      filter((((profund_sup %in% input$profun[1]:input$profun[2]) & 
-                 (profund_inf %in% input$profun[1]:input$profun[2])) |
-                (is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
-               (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
-    if(input$maintabs == 'segTab'){
+    dados <- 
       dados %>% 
-        select(
-          'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
-           Carbono = carbono, CTC = ctc, pH = ph, CE = ce, DSI = dsi)
+      # Esse filter é usado em todos filtros, ele diz se a profundade esta entre o input profun
+      # filtra tambem, os anos da observacao_data, se estao entre o input data
+      # essa filtragem de profundidade e ano tambem eh aplicada nos outros filtros abaixo
+       filter((((dados$profund_sup %in% input$profun[1]:input$profun[2]) & 
+                    (dados$profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
+                  (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))  
+    
+    #Condicoes para apresentacao das abas
+    if(input$maintabs == 'priTab'){
+      # Para a tabela localizacao, remove-se as observacoes repetidas 
+      dados %>% 
+        select(vars_localizacao) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+      
+    }else if(input$maintabs == 'segTab'){
+      # Para a tabela analitica, apresenta em condicao de ordem crescente da profundidade 
+      dados %>% 
+        select(!!!vars_analiticas) %>%
+        group_by(dataset_id, observacao_id) %>% 
+        arrange(profund_sup, .by_group = TRUE)  
+      
+    }else if(input$maintabs == 'download'){
+      # Para a aba de download, seleciona a variavel que contem as informacoes para download definida no comeco do codigo
+      dados %>% select(vars_download)
+      
     }else{
-      dados %>% select(vars_localizacao) 
+      # Para a aba do mapa, Apresenta as variaveis para plotagem no mapa, apresentar o label e o popup corretamente
+      # removendo tambem, as observacoes repetidas
+      dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
   
-  filtroEst <- reactive({
+  # filtroEst, filtra os estados, 
+  # ultilizado quando o usuario altera somente o estado (input est)
+  filtroEst <- reactive({ 
     dados <- dados %>%
-    filter((dados$estado_id == input$est) & 
-        ((profund_sup %in% input$profun[1]:input$profun[2]) & 
-        (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf)) &
-          (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
-      if(input$maintabs == 'segTab'){
-        dados %>% 
-          select(
-            'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
-            Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
-      }else{
-        dados %>% select(vars_localizacao)
-      }
+     filter((dados$estado_id == input$est) & 
+         ((profund_sup %in% input$profun[1]:input$profun[2]) & 
+         (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf)) &
+           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
+    
+    if(input$maintabs == 'priTab'){
+      dados %>% 
+        select(vars_localizacao) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+    }else if(input$maintabs == 'segTab'){
+      dados %>% 
+        select(!!!vars_analiticas) %>%
+        group_by(dataset_id, observacao_id) %>% 
+        arrange(profund_sup, .by_group = TRUE)  
+    }else if(input$maintabs == 'download'){
+      dados %>% select(vars_download)
+    }else{
+      dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+    }
   })
   
+  # filtroCid, filtra as cidades que contem dentro do estado selecionado
   filtroCid <- reactive({
     dados <- dados %>% 
-    filter((dados$municipio_id == input$cid) & (dados$estado_id == input$est) &
-        (((profund_sup %in% input$profun[1]:input$profun[2]) & 
-        (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
-          (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
-      if(input$maintabs == 'segTab'){
-        dados %>% 
-          select(
-            'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
-            Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
-      }else{
-        dados %>% select(vars_localizacao)
-      }
+    filter((dados$municipio_id == input$cid) & (dados$estado_id == input$est) & 
+             ((((dados$profund_sup %in% input$profun[1]:input$profun[2]) & 
+              (dados$profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
+              (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))) 
+    
+    if(input$maintabs == 'priTab'){
+      dados %>% 
+        select(vars_localizacao) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+    }else if(input$maintabs == 'segTab'){
+      dados %>% 
+        select(!!!vars_analiticas) %>%
+        group_by(dataset_id, observacao_id) %>% 
+        arrange(profund_sup, .by_group = TRUE)
+    }else if(input$maintabs == 'download'){
+      dados %>% select(vars_download)
+    }else{
+      dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+    }
   })
   
+  # filtroEstTax, filtra a classificacao taxonomica pelo estado, 
+  # ultilizado quando o usuario altera somente a taxonomia e o estado
   filtroEstTax <- reactive({
-    dados <- dados %>% filter(input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs 
-         & (((profund_sup %in% input$profun[1]:input$profun[2]) & 
+      dados <- dados %>% filter(input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs  &
+          (((profund_sup %in% input$profun[1]:input$profun[2]) & 
          (profund_inf %in% input$profun[1]:input$profun[2]) |
          is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
          (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
-      if(input$maintabs == 'segTab'){
+      
+      if(input$maintabs == 'priTab'){
         dados %>% 
-          select(
-            'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
-            Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
+          select(vars_localizacao) %>% 
+          distinct(dataset_id, observacao_id, .keep_all = TRUE)
+      }else if(input$maintabs == 'segTab'){
+        dados %>% 
+          select(!!!vars_analiticas) %>%
+          group_by(dataset_id, observacao_id) %>% 
+          arrange(profund_sup, .by_group = TRUE)  
+      }else if(input$maintabs == 'download'){
+        dados %>% select(vars_download)
       }else{
-        dados %>% select(vars_localizacao)
+        dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
+          distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
   })
+  
+  # filtroEstCidTax, filtra ultilizado quando o usuario altera todos inputs
+  # taxonomia, cidade e estado
   
   filtroEstCidTax <- reactive({
     dados <- dados %>%    
@@ -227,212 +385,184 @@ server <- function(input, output, session) {
           (((profund_sup %in% input$profun[1]:input$profun[2]) & 
           (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
-      if(input$maintabs == 'segTab'){
-        dados %>% 
-          select(
-            'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
-             Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
-      }else{
-        dados %>% select(vars_localizacao)
-      }
+    
+    if(input$maintabs == 'priTab'){
+      dados %>% 
+        select(vars_localizacao) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+    }else if(input$maintabs == 'segTab'){
+      dados %>% 
+        select(!!!vars_analiticas) %>%
+        group_by(dataset_id, observacao_id) %>% 
+        arrange(profund_sup, .by_group = TRUE)  
+    }else if(input$maintabs == 'download'){
+      dados %>% select(vars_download)
+    }else{
+      dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+    }
   })
   
+  # filtroTax, filtra a classificacao taxonomica, 
+  # ultilizado quando o usuario altera somente a taxonomia (input clasTox)
   filtroTax <- reactive({
     dados <- dados %>%    
     filter((input$clasTox == dados$taxon_sibcs) &
           (((profund_sup %in% input$profun[1]:input$profun[2]) & 
           (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
           (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
+    
     if(input$maintabs == 'segTab'){
-      dados %>% 
-        select(
-          'Terra fina' = terrafina, Argila = argila, Silte = silte, Areia = areia,
-           Carbono = carbono, CTC = ctc, pH = ph, CE = ce,DSI = dsi)
+      dados %>% select(!!!vars_analiticas)
+    }else if(input$maintabs == 'priTab'){
+      dados %>% select(vars_localizacao)%>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+    }else if(input$maintabs == 'download'){
+      dados %>% select(vars_download)
     }else{
-      dados %>% select(vars_localizacao)
+      dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
   
-  #---------------------------------------------------------------------------------------------
+# Tabela de localização ---------------------------------------------------------------------------------------------
   
-  #tableOutput "Dados"
-  output$outDados <- DT::renderDataTable({
-    if(input$est == 'Todos' && input$clasTox == 'Todos'){
-      DT::datatable(filtroTodos(),
-            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-      
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroEst(), 
-            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-      
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
-      DT::datatable(filtroCid(),
-            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))        
-      
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroEstTax(),
-            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-    
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
-      DT::datatable(filtroEstCidTax(), 
-            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-    
-    }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroTax(),
-            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-    }
-  })
+  # Apresentacao da tabela localizacao conforme for filtrado. 
+  output$outDados <- 
+    DT::renderDataTable({
+      if (input$est == 'Todos' && input$clasTox == 'Todos') {
+        filtroTodos() %>% 
+          dataTables()
+      } else if (input$est != 'Todos' && input$clasTox == 'Todos' && input$cid == 'Todos') {
+        filtroEst() %>% 
+          dataTables()
+      } else if (input$est != 'Todos' && input$clasTox == 'Todos' && input$cid != 'Todos') {
+        filtroCid() %>% 
+          dataTables()
+      } else if (input$est != 'Todos' && input$clasTox != 'Todos' && input$cid == 'Todos') {
+        filtroEstTax() %>% 
+          dataTables()
+      } else if (input$est != 'Todos' && input$clasTox != 'Todos' && input$cid != 'Todos') {
+        filtroEstCidTax() %>% 
+          dataTables()
+      } else if (input$est == 'Todos' && input$clasTox != 'Todos' && input$cid == 'Todos') {
+        filtroTax() %>% 
+          dataTables()
+      }
+    })
   
-  #-------------------------------------------------------------------------------------------------------------------
-  
-  # tableoutput segDados
+# Tabela Analitica --------------------------------------------------------------------------------------------
+ 
+  # Apresentacao da tabela analitica conforme for filtrado. 
   output$outDadosSeg <- DT::renderDataTable({
-    if(input$est == 'Todos' && input$clasTox == 'Todos'){
-      DT::datatable(filtroTodos(),
-          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-      
+    if (input$est == 'Todos' && input$clasTox == 'Todos') {
+      filtroTodos() %>% 
+        dataTables()
     }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroEst(), 
-          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-      
+      filtroEst() %>% 
+        dataTables()
     }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
-      DT::datatable(filtroCid(),
-          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))        
-      
+      filtroCid() %>% 
+        dataTables()
     }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroEstTax(),
-          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-    
+      filtroEstTax() %>% 
+        dataTables()
     }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
-      DT::datatable(filtroEstCidTax(), 
-          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
-    
+      filtroEstCidTax() %>% 
+        dataTables()
     }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-      DT::datatable(filtroTax(),
-          options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-          language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json')))
+      filtroTax() %>% 
+        dataTables()
     }
   })
   
+
+# Mapa -------------------------------------------------------------------------------------------------    
+  
+  # Apresentacao do mapa conforme for filtrado. 
   output$outMapa <- renderLeaflet({
-    m <- leaflet() %>%
-      # setView(lng = -50.8663589, lat = -12.9214564, zoom = 4) %>%
+    
+    #Variavel "m" esta recebendo as informacoes de providerTiles e miniMap
+    m <- leaflet() %>% 
+      #addResetMapButton() %>% 
+      #setView(lng = -50.8663589, lat = -12.9214564, zoom = 4) %>%
       addProviderTiles("Esri.WorldStreetMap", group = "Esri.WorldStreetMap") %>% 
       addProviderTiles("CartoDB.Positron", group = "CartoDB.Positron") %>% 
       addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
       addLayersControl(
       baseGroups = c("Esri.WorldStreetMap", "CartoDB.Positron", "Esri.WorldImagery"),
-      options = layersControlOptions(collapsed = TRUE)) 
+      options = layersControlOptions(collapsed = TRUE)) %>%
+      addMiniMap() 
     
     if(input$est == 'Todos' && input$clasTox == 'Todos'){
-        m %>%  
-          addAwesomeMarkers(
-            lng = as.numeric(na.omit(filtroTodos()$coord_x)),
-            lat = as.numeric(na.omit(filtroTodos()$coord_y)),
-            icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
-            clusterOptions = markerClusterOptions(),
-            label = filtroTodos()$observacao_id)
-      }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
-        m %>%
-          addAwesomeMarkers(
-            lng = as.numeric(na.omit(sub(',', '.', filtroEst()$coord_x))),
-            lat = as.numeric(na.omit(sub(',', '.', filtroEst()$coord_y))),
-            icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
-            clusterOptions = markerClusterOptions(),
-            label = filtroEst()$observacao_id)
-            
-       }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
-         m %>%
-           addAwesomeMarkers(
-             lng = as.numeric(na.omit(sub(',','.',filtroCid()$coord_x))),
-             lat = as.numeric(na.omit(sub(',','.',filtroCid()$coord_y))),
-             icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
-             clusterOptions = markerClusterOptions(),
-             label = filtroCid()$observacao_id)
+      #tmp e uma variavel temporaria para nao precisar ativar o filtro com muita frequencia
+      tmp <- filtroTodos()
       
-       }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-         m %>%
-           addAwesomeMarkers(
-             lng = as.numeric(na.omit(sub(',','.',filtroEstTax()$coord_x))),
-             lat = as.numeric(na.omit(sub(',','.',filtroEstTax()$coord_y))),
-             icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
-             clusterOptions = markerClusterOptions(),
-             label = filtroEstTax()$observacao_id)
-       
-        }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
-          m %>%
-            addAwesomeMarkers(
-              lng = as.numeric(na.omit(sub(',','.',filtroEstCidTax()$coord_x))),
-              lat = as.numeric(na.omit(sub(',','.',filtroEstCidTax()$coord_y))),
-              icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
-              clusterOptions = markerClusterOptions(),
-              label = filtroEstCidTax()$observacao_id)
-       }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-         m %>%
-           addAwesomeMarkers(
-             lng = as.numeric(na.omit(sub(',','.',filtroTax()$coord_x))),
-             lat = as.numeric(na.omit(sub(',','.',filtroTax()$coord_y))),
-             icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
-             clusterOptions = markerClusterOptions(),
-             label = filtroTax()$observacao_id)
-       }
-        
+      # Aqui passamos a varia "m" e "tmp" para a funcao "marks" 
+      # para adicionar os marcadores do mapa conforme for filtrado
+      m %>% 
+        marks(tmp)
+     }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
+       tmp <- filtroEst()
+       m %>%
+         marks(., tmp)
+     }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
+       tmp <- filtroCid()    
+       m %>%
+         marks(., tmp)
+     }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+       tmp <- filtroEstTax()      
+       m %>%
+          marks(., tmp)
+     }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
+       tmp <- filtroEstCidTax()       
+       m %>%
+            marks(., tmp)
+     }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+       tmp <- filtroTax()      
+       m %>%
+          marks(., tmp)
+     }
    })
   
-  #------------------------------------------------------------------------------------------------------------------
-  
-  # Download
-  
-  observe({
-    updateRadioButtons(session,'formato', selected = 'CSV')
-  })
-  
-  fileExt <- reactive({
-    switch (input$formato,
-      'CSV' = 'csv', 'TXT' = 'txt', 'TSV' = 'txt')
-  })
-  
+
+  # Download ------------------------------------------------------------------------------------------------------------------
+ 
+  # Variavel reativa conforme selecao do usuario (ainda nao ultilizada, pois ha apenas uma opcao)
+  # fileExt <- reactive({
+  #   switch (input$formato,
+  #           'TXT' = 'txt')
+  # })
+   
   output$download <- downloadHandler(
-    filename = function(){
-        paste('dados-febr-', Sys.Date(), ".", fileExt(), sep = '')
-    },
     
+    # funcao para o nome do arquivo que esta sendo descarregado
+    filename = function()
+      paste('dados-febr-', Sys.Date(), ".", fileExt(), sep = ''),
+    
+    # funcao para escreve arquivo que sera descarregado aplicado a filtragem
     content = function(file){
-        #sep1 <- switch (input$formato, 'CSV' = ',', 'TSV' = '\t', "TXT" = ';')
-          
-        
-        if(input$est == 'Todos' & input$clasTox == 'Todos'){
-          write.table(filtroTodos(),file, sep = ';', row.names = FALSE)
+      if(input$est == 'Todos' & input$clasTox == 'Todos'){
+        write.table(filtroTodos(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
       
-        }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
-          write.table(filtroEst(),file, sep = ';', row.names = FALSE)
+      }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
+        write.table(filtroEst(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
 
-        }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
-          write.table(filtroCid(),file, sep = ';', row.names = FALSE)
+      }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
+        write.table(filtroCid(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
 
-        }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-          write.table(filtroEstTax(),file, sep = ';', row.names = FALSE)
+      }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+        write.table(filtroEstTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
 
-        }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
-          write.table(filtroEstCidTax(),file, sep = ';', row.names = FALSE)
-        
-        }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
-          write.table(filtroTax(),file, sep = ';', row.names = FALSE)
-       }
+      }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
+        write.table(filtroEstCidTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+      
+      }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+        write.table(filtroTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+     }
     }
   )
-} 
+}
 
 
 shinyApp(ui = ui, server = server)
