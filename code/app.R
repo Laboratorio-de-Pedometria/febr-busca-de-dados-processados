@@ -1,3 +1,10 @@
+# Title: Repositório Brasileiro Livre para Dados Abertos do Solo - aplicação Shiny
+# Version: 2.0.0
+# Date: 2019-03-08
+# Authors: Matheus Ferreira Ramos (), Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br)
+# License: GPL (>= 2)
+# Encoding: UTF-8
+
 # Bibliotecas -------------------------------------------------------------
 
 library(shiny)
