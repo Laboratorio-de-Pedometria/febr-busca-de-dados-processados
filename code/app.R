@@ -280,12 +280,16 @@ server <- function (input, output, session) {
       my.data <-
         dados %>%   
         dplyr::filter(
-          profund_sup %in% input$profun[1]:input$profun[2] & 
-            profund_inf %in% input$profun[1]:input$profun[2] | 
-            is.na(profund_sup) | 
-            is.na(profund_inf) &
+          (
+            profund_sup %in% input$profun[1]:input$profun[2] & 
+              profund_inf %in% input$profun[1]:input$profun[2] | 
+              is.na(profund_sup) | 
+              is.na(profund_inf)
+          ) & (
             year(observacao_data) %in% input$data[1]:input$data[2] | 
-            is.na(observacao_data))
+              is.na(observacao_data)
+          )
+        )
       
       #Condicoes para apresentacao das abas
       if (input$maintabs == 'priTab') {
@@ -324,16 +328,19 @@ server <- function (input, output, session) {
     reactive({ 
       my.data <-
         dados %>%
-        dplyr::filter(estado_id %in% input$est)
-      # dplyr::filter(
-      # (dados$estado_id == input$est) &
-      # ((profund_sup %in% input$profun[1]:input$profun[2]) &
-      # (profund_inf %in% input$profun[1]:input$profun[2]) |
-      # is.na(dados$profund_sup) |
-      # is.na(dados$profund_inf)) &
-      # (year(dados$observacao_data) %in% input$data[1]:input$data[2] |
-      # is.na(dados$observacao_data))
-      # )
+        dplyr::filter(
+          (
+            estado_id == input$est 
+          ) & (
+            profund_sup %in% input$profun[1]:input$profun[2] &
+              profund_inf %in% input$profun[1]:input$profun[2] |
+              is.na(profund_sup) | 
+              is.na(profund_inf)
+          ) & (
+            year(observacao_data) %in% input$data[1]:input$data[2] | 
+              is.na(observacao_data)
+          )
+        )
       if (input$maintabs == 'priTab') {
         my.data %>% 
           select(vars_localizacao) %>% 
