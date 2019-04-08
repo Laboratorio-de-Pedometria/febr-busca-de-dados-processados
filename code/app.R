@@ -15,6 +15,7 @@ library(lubridate)
 library(leaflet)
 library(leaflet.extras)
 library(stringr)
+library(magrittr)
 #library(glue)
 #library(rgdal)
 #library(sp)
@@ -34,7 +35,6 @@ sep_col <- '\t'
 dados <- 
   getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.txt") %>% 
   read.table(text = ., sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
-
 
 # Definindo Variaveis ------------------------
 
@@ -159,7 +159,7 @@ ui <- fluidPage(
   )
 
 
-server <- function(input, output, session) {
+server <- function (input, output, session) {
   
   # Funções auxiliares ------------------------------------------------------
   
@@ -185,17 +185,18 @@ server <- function(input, output, session) {
       }
     }
   
-  # funcao para adicionar marcadores no mapa
+  # Função para adicionar marcadores ao mapa. Primeiro são descartadas as observações que não possuem 
+  # coordenadas espaciais.
   marks <-
-    function(x,y) {
-      x %>%
+    function (my.map, my.points) {
+      my.points %<>% 
+        dplyr::filter(!is.na(coord_x) | !is.na(coord_y))
+      my.map %>%
         addAwesomeMarkers(
-          lng = as.numeric(na.omit(y$coord_x)),
-          lat = as.numeric(na.omit(y$coord_y)),
+          lng = my.points$coord_x, lat = my.points$coord_y,
           icon = awesomeIcons(icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
           clusterOptions = markerClusterOptions(),
-          popup = y$dataset_link,
-          label = y$labelMap)
+          popup = my.points$dataset_link, label = my.points$labelMap)
     }
   
   ### UpdateInputs ---------------------------------------------------------
@@ -206,9 +207,10 @@ server <- function(input, output, session) {
       dados %>%
       arrange(dados$estado_id) %>%
       select(estado_id) %>% 
-      unique()
+      unique() %>% 
+      na.exclude()
       updateSelectInput(session, "est", "UF", choices = c("Todos", estados))
-  }) 
+  })
   
   # funcao reativa para atualizao o selectInput da cidade para apresentar 
   # somente as cidades do estado dentro do superconjunto e ordenar alfabeticamente
@@ -306,31 +308,42 @@ server <- function(input, output, session) {
     }
   })
   
+  # Filtro de UF ----
   # filtroEst, filtra os estados, 
   # ultilizado quando o usuario altera somente o estado (input est)
   filtroEst <- 
     reactive({ 
-      dados <- 
+      my.data <-
+        # dados <- 
         dados %>%
-        filter((dados$estado_id == input$est) & 
-                 ((profund_sup %in% input$profun[1]:input$profun[2]) & 
-                    (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf)) &
-                 (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
+        dplyr::filter(
+          (dados$estado_id == input$est) &
+            ((profund_sup %in% input$profun[1]:input$profun[2]) &
+               (profund_inf %in% input$profun[1]:input$profun[2]) |
+               is.na(dados$profund_sup) |
+               is.na(dados$profund_inf)) &
+            (year(dados$observacao_data) %in% input$data[1]:input$data[2] |
+               is.na(dados$observacao_data))
+        )
       if (input$maintabs == 'priTab') {
-        dados %>% 
+        my.data %>% 
+          # dados %>% 
           select(vars_localizacao) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       } else if (input$maintabs == 'segTab') {
-        dados %>% 
+        my.data %>% 
+          # dados %>% 
           select(!!!vars_analiticas) %>%
           group_by(dataset_id, observacao_id) %>% 
           arrange(profund_sup, .by_group = TRUE)  
       } else if (input$maintabs == 'download') {
-        dados %>% 
+        my.data %>% 
+          # dados %>% 
           select(vars_download)
       } else {
-        dados %>% 
-          select(vars_localizacao, dataset_link, labelMap) %>% 
+        my.data %>% 
+          # dados %>% 
+          select(vars_localizacao, dataset_link, labelMap) %>%
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
     })
@@ -548,11 +561,11 @@ server <- function(input, output, session) {
   output$download <- downloadHandler(
     
     # funcao para o nome do arquivo que esta sendo descarregado
-    filename = function()
+    filename = function ()
       paste('dados-febr-', Sys.Date(), ".", fileExt(), sep = ''),
     
     # funcao para escreve arquivo que sera descarregado aplicado a filtragem
-    content = function(file) {
+    content = function (file) {
       if (input$est == 'Todos' & input$clasTox == 'Todos') {
         write.table(filtroTodos(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
