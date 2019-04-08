@@ -39,123 +39,118 @@ dados <-
 # Definindo Variaveis ------------------------
 
 #Variavel para apresentacao da tabela localizacao
-vars_localizacao <- c('dataset_id' = 'dataset_id_ap', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y',
-                      'taxon_sibcs', 'municipio_id', 'estado_id') 
+vars_localizacao <- 
+  c('dataset_id' = 'dataset_id_ap', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'taxon_sibcs',
+    'municipio_id', 'estado_id')
 
 #variavel para apresentacao da tabela analitica
 # função sym: EXPLICAR ESTRETÉGIA USADA PARA RENOMEAR COLUNAS
-vars_analiticas <- c('dataset_id' = sym('dataset_id_ap'), 'observacao_id', 'profund_sup', 'profund_inf',
-                     list('Terra fina' = sym('terrafina'), Argila = sym('argila'), Silte = sym('silte'),
-                          Areia = sym('areia'), Carbono = sym('carbono'), CTC = sym('ctc'), 
-                          pH = sym('ph'), CE = sym('ce'), DSI = sym('dsi')))
+vars_analiticas <-
+  c('dataset_id' = sym('dataset_id_ap'), 'observacao_id', 'profund_sup', 'profund_inf',
+    list('Terra fina' = sym('terrafina'), Argila = sym('argila'), Silte = sym('silte'), Areia = sym('areia'),
+         Carbono = sym('carbono'), CTC = sym('ctc'), pH = sym('ph'), CE = sym('ce'), DSI = sym('dsi')))
 
 #Variavel para fazer o descarregamento
-vars_download <- c('dataset_id','observacao_id','sisb_id','ibge_id','observacao_data',
-                   'coord_x','coord_y','coord_precisao','coord_fonte','pais_id','estado_id',
-                   'municipio_id','amostra_tipo','amostra_quanti', 'amostra_area','taxon_sibcs',
-                   'taxon_st','taxon_wrb','camada_id', 'amostra_id','camada_nome','profund_sup',
-                   'profund_inf', 'terrafina', 'argila', 'silte', 'areia', 'carbono', 'ctc',
-                   'ph', 'dsi','ce')
+vars_download <-
+  c('dataset_id', 'observacao_id', 'sisb_id', 'ibge_id', 'observacao_data', 'coord_x', 'coord_y', 
+    'coord_precisao', 'coord_fonte', 'pais_id', 'estado_id', 'municipio_id', 'amostra_tipo', 'amostra_quanti',
+    'amostra_area', 'taxon_sibcs', 'taxon_st', 'taxon_wrb', 'camada_id', 'amostra_id', 'camada_nome',
+    'profund_sup', 'profund_inf', 'terrafina', 'argila', 'silte', 'areia', 'carbono', 'ctc', 'ph', 'dsi', 'ce')
 
-#Criando nova coluna para receber o dataset_id como link e apresentar no popup como 'mais informacoes'
+# Criando nova coluna para receber o dataset_id como link e apresentar no popup como 'mais informacoes'
 dados$dataset_link <- 
   paste0("<a href=http://coral.ufsm.br/febr/catalog/", 
          dados$dataset_id," target='_blank'> ", 'Mais informações?',"</a>")
 
-#Criando nova coluna para apresentacao do label no mapa
+# Criando nova coluna para apresentacao do label no mapa
 dados$labelMap <- 
   paste0(dados$observacao_id, '@', dados$dataset_id)
 
-#Criando nova coluna para apresentar o dataset_id como link e nao modificar o dataset_id original
+# Criando nova coluna para apresentar o dataset_id como link e nao modificar o dataset_id original
 dados$dataset_id_ap <-
   paste0("<a href=http://coral.ufsm.br/febr/catalog/", 
          dados$dataset_id," target='_blank'> ", dados$dataset_id,"</a>")
 
-#Variavel para receber o valor maximo da profundidade
-profun_max <- dados$profund_inf %>% max(na.rm = TRUE)
+# Variavel para receber o valor maximo da profundidade
+profun_max <- 
+  dados$profund_inf %>% 
+  max(na.rm = TRUE)
 
-#variavel para acessar avaliação 
+# variavel para acessar avaliação 
 link_avaliacao <- c('https://forms.gle/ZxeeiHF487JR5hm57')
+
 # Inicio -------------------------------------------------
 
 ui <- fluidPage(
   titlePanel(a(href = 'http://coral.ufsm.br/febr/', img(src = 'logo.png')), 'febr'),
   tags$hr(),  
   fluidRow(
-    column(2,
-           wellPanel(
-             selectInput(inputId = "est", label = "UF", choices = NULL),
-             
-             selectInput("cid", "Município", choices =  NULL),
-             
-             selectInput("clasTox", "Taxonomia", choices = NULL), 
-             
-             sliderInput("data", "Ano", min = 1900, max = 2019, value = c(1900, 2019), sep=''),
-             
-             sliderInput("profun", "Profundidade (cm)", sep = '', min = 0, max = profun_max, value = c(0, profun_max))
-           )
+    column(
+      2,
+      wellPanel(
+        selectInput(inputId = "est", label = "UF", choices = NULL),
+        selectInput("cid", "Município", choices =  NULL),
+        selectInput("clasTox", "Taxonomia", choices = NULL), 
+        sliderInput("data", "Ano", min = 1900, max = 2019, value = c(1900, 2019), sep=''),
+        sliderInput(
+          "profun", "Profundidade (cm)", sep = '', min = 0, max = profun_max, value = c(0, profun_max))
+      )
     ),
     
-    
     # main / tab-dados
-    column(width = 9,
-           tabsetPanel(id = 'maintabs',
-                       
-                       #Primeira aba "Localizaocao"          
-                       tabPanel(title = tags$h3('Localização'), value = 'priTab', tags$br(),
-                                tags$p(class = 'lead'),tags$hr(),
-                                DT::dataTableOutput("outDados")),
-                       
-                       #Segunda aba "Dados analiticos"
-                       tabPanel(title = tags$h3('Dados analíticos'), value = 'segTab', tags$br(),
-                                tags$p(class = 'lead'),tags$hr(),
-                                DT::dataTableOutput("outDadosSeg")),
-                       
-                       
-                       # output mapa
-                       # Terceira aba "Mapa"
-                       tabPanel(title = tags$h3('Mapa'), value = 'map',
-                                fluidRow(
-                                  column(12,
-                                         tags$br(), tags$hr(),  
-                                         leafletOutput('outMapa', width = '100%', height = '600'),
-                                         actionButton("reset_button", "Ver tudo"),
-                                         tags$style("#reset_button {float:left; margin-top:-45px;
-                                                    margin-left:20px; position:relative;}"), tags$br()))),
-                       
-                       # Tab Download
-                       # Quarta aba "Descarregar"             
-                       tabPanel(title = tags$h3('Descarregar'), value = 'download', tags$br(), tags$hr(),
-                                fluidRow(tags$br(),
-                                         column(width = 6, offset = 3,
-                                                wellPanel(
-                                                  tags$br(), 
-                                                  h3('Clique no botão abaixo para descarregar os dados: '), tags$br(), 
-                                                  # radioButtons('formato', h3('Clique no botão para descarregar os dados: '), tags$br(), 
-                                                  #   inline = TRUE, choices = c('TXT')), 
-                                                  style = 'text-align:center',
-                                                  tags$br(), 
-                                                  downloadButton(outputId = 'download',
-                                                                 label = 'Descarregar', class = 'dlb'),
-                                                  tags$head(tags$style(".dlb{width: 100%;}"))
-                                                )
-                                         )
-                                )
-                       ),
-                       
-                       tabPanel(title = tags$h3('Avalie'), value = 'avaliacao', tags$br(),
-                                fluidRow(
-                                  column(8, offset = 2,
-                                         wellPanel( tags$br(), 
-                                                    h3('Olá, tudo bem ?'), tags$br(),
-                                                    p('Obrigado por ultilizar nosso nova ferramenta de busca e visualização.', br(), 
-                                                      'Neste período de testes pedimos para que você nos dê sugestões para 
-                                                      melhorarmos esta ferramenta. Para poder avaliar, clique ', a(href = link_avaliacao, 'aqui.'), br(),
-                                                      'Muito obrigado!'),
-                                                    tags$br() ))))
-                                         )
-           )  
-                                )
+    column(
+      width = 9,
+      tabsetPanel(
+        id = 'maintabs',
+        # Primeira aba "Localizaocao"
+        tabPanel(title = tags$h3('Localização'), value = 'priTab', tags$br(),
+                 tags$p(class = 'lead'),tags$hr(), DT::dataTableOutput("outDados")),
+        
+        # Segunda aba "Dados analiticos"
+        tabPanel(title = tags$h3('Dados analíticos'), value = 'segTab', tags$br(),
+                 tags$p(class = 'lead'),tags$hr(), DT::dataTableOutput("outDadosSeg")),
+        
+        # output mapa
+        # Terceira aba "Mapa"
+        tabPanel(title = tags$h3('Mapa'), value = 'map',
+                 fluidRow(
+                   column(
+                     12,
+                     tags$br(), tags$hr(), leafletOutput('outMapa', width = '100%', height = '600'),
+                     actionButton("reset_button", "Ver tudo"),
+                     tags$style("#reset_button {float:left; margin-top:-45px; margin-left:20px; position:relative;}"), 
+                     tags$br()))),
+        # Tab Download
+        # Quarta aba "Descarregar"
+        tabPanel(title = tags$h3('Descarregar'), value = 'download', tags$br(), tags$hr(),
+                 fluidRow(tags$br(), 
+                          column(width = 6, offset = 3,
+                                 wellPanel(tags$br(), 
+                                           h3('Clique no botão abaixo para descarregar os dados: '), 
+                                           tags$br(), 
+                                           # radioButtons('formato', h3('Clique no botão para descarregar os dados: '), tags$br(), 
+                                           #   inline = TRUE, choices = c('TXT')), 
+                                           style = 'text-align:center', tags$br(), 
+                                           downloadButton(outputId = 'download',
+                                                          label = 'Descarregar', class = 'dlb'),
+                                           tags$head(tags$style(".dlb{width: 100%;}"))
+                                 )
+                          )
+                 )
+        ),
+        tabPanel(title = tags$h3('Avalie'), value = 'avaliacao', tags$br(),
+                 fluidRow(
+                   column(8, offset = 2,
+                          wellPanel( tags$br(), 
+                                     h3('Olá, tudo bem ?'), tags$br(),
+                                     p('Obrigado por ultilizar nosso nova ferramenta de busca e visualização.', br(), 
+                                       'Neste período de testes pedimos para que você nos dê sugestões para 
+                                       melhorarmos esta ferramenta. Para poder avaliar, clique ', a(href = link_avaliacao, 'aqui.'), br(),
+                                       'Muito obrigado!'),
+                                     tags$br() ))))
+      )
+      )  
+                 )
   )
 
 
@@ -205,7 +200,7 @@ server <- function (input, output, session) {
   observe({ 
     estados <-
       dados %>%
-      arrange(dados$estado_id) %>%
+      arrange(estado_id) %>%
       select(estado_id) %>% 
       unique() %>% 
       na.exclude()
@@ -311,7 +306,7 @@ server <- function (input, output, session) {
         my.data %>% 
           select(vars_download)
         
-      } else{
+      } else {
         # Para a aba do mapa, Apresenta as variaveis para plotagem no mapa, apresentar o label e o popup 
         # corretamente
         # removendo tambem, as observacoes repetidas
@@ -538,7 +533,6 @@ server <- function (input, output, session) {
       # para adicionar os marcadores do mapa conforme for filtrado
       m %>% 
         marks(tmp)
-    } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))) {
       tmp <- filtroEst()
       m %>%
         marks(., tmp)
@@ -565,16 +559,18 @@ server <- function (input, output, session) {
   # Download ------------------------------------------------------------------------------------------------------------------
   
   # Variavel reativa conforme selecao do usuario (ainda nao ultilizada, pois ha apenas uma opcao)
-  # fileExt <- reactive({
-  #   switch (input$formato,
-  #           'TXT' = 'txt')
-  # })
+  # fileExt <- 
+  #   reactive({
+  #     switch (input$formato,
+  #             'TXT' = 'txt')
+  #     })
   
   output$download <- downloadHandler(
     
     # funcao para o nome do arquivo que esta sendo descarregado
-    filename = function ()
+    filename <- function ()
       paste('dados-febr-', Sys.Date(), ".", fileExt(), sep = ''),
+    
     
     # funcao para escreve arquivo que sera descarregado aplicado a filtragem
     content = function (file) {
@@ -599,6 +595,5 @@ server <- function (input, output, session) {
     }
   )
 }
-
 
 shinyApp(ui = ui, server = server)
