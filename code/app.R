@@ -166,7 +166,7 @@ server <- function(input, output, session) {
   #Função para apresentação das tabelas
   dataTables <-
     function (x) {
-      if(input$maintabs == 'priTab'){
+      if (input$maintabs == 'priTab') {
         x %>%
           DT::datatable(
             filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
@@ -174,7 +174,7 @@ server <- function(input, output, session) {
                            language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'))) %>%
           # Função para alterar separador decimal
           formatCurrency(., c('coord_x', 'coord_y'), currency = "", digits = 8, dec.mark = ',')
-      }else if(input$maintabs == 'segTab'){
+      } else if (input$maintabs == 'segTab') {
         x %>%
           DT::datatable(
             filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
@@ -187,7 +187,7 @@ server <- function(input, output, session) {
   
   # funcao para adicionar marcadores no mapa
   marks <-
-    function(x,y){
+    function(x,y) {
       x %>%
         addAwesomeMarkers(
           lng = as.numeric(na.omit(y$coord_x)),
@@ -202,11 +202,12 @@ server <- function(input, output, session) {
   
   # funcao reativa para atualizao o selectInput do estado e ordenar alfabeticamente
   observe({ 
-    estados <- 
+    estados <-
       dados %>%
       arrange(dados$estado_id) %>%
-      select(estado_id)
-    updateSelectInput(session, "est", "UF", choices = c("Todos", unique(estados)))
+      select(estado_id) %>% 
+      unique()
+      updateSelectInput(session, "est", "UF", choices = c("Todos", estados))
   }) 
   
   # funcao reativa para atualizao o selectInput da cidade para apresentar 
@@ -223,17 +224,17 @@ server <- function(input, output, session) {
   # funcao reativa para atualizao o selectInput da classificacao taxonomica apresentando
   # somente as taxonomia que tem no estado ou cidade selecionado e ordenar alfabeticamente 
   observe({ 
-    if(input$cid != 'Todos'){
+    if (input$cid != 'Todos') {
       classificacao <- dados %>% 
         filter((dados$estado_id == input$est) & (dados$municipio_id == input$cid )) %>% 
         select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
       updateSelectInput(session, "clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
       
-    }else if(input$est == 'Todos'){
+    } else if (input$est == 'Todos') {
       classificacao <- dados %>% select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
       updateSelectInput(session, "clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
       
-    }else if(input$est != 'Todos'){
+    } else if (input$est != 'Todos') {
       classificacao <- dados %>% 
         filter(dados$estado_id == input$est) %>% 
         select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
@@ -280,24 +281,24 @@ server <- function(input, output, session) {
                (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))  
     
     #Condicoes para apresentacao das abas
-    if(input$maintabs == 'priTab'){
+    if (input$maintabs == 'priTab') {
       # Para a tabela localizacao, remove-se as observacoes repetidas 
       dados %>% 
         select(vars_localizacao) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
       
-    }else if(input$maintabs == 'segTab'){
+    } else if (input$maintabs == 'segTab') {
       # Para a tabela analitica, apresenta em condicao de ordem crescente da profundidade 
       dados %>% 
         select(!!!vars_analiticas) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)  
       
-    }else if(input$maintabs == 'download'){
+    } else if (input$maintabs == 'download') {
       # Para a aba de download, seleciona a variavel que contem as informacoes para download definida no comeco do codigo
       dados %>% select(vars_download)
       
-    }else{
+    } else{
       # Para a aba do mapa, Apresenta as variaveis para plotagem no mapa, apresentar o label e o popup corretamente
       # removendo tambem, as observacoes repetidas
       dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
@@ -307,29 +308,32 @@ server <- function(input, output, session) {
   
   # filtroEst, filtra os estados, 
   # ultilizado quando o usuario altera somente o estado (input est)
-  filtroEst <- reactive({ 
-    dados <- dados %>%
-      filter((dados$estado_id == input$est) & 
-               ((profund_sup %in% input$profun[1]:input$profun[2]) & 
-                  (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf)) &
-               (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
-    
-    if(input$maintabs == 'priTab'){
-      dados %>% 
-        select(vars_localizacao) %>% 
-        distinct(dataset_id, observacao_id, .keep_all = TRUE)
-    }else if(input$maintabs == 'segTab'){
-      dados %>% 
-        select(!!!vars_analiticas) %>%
-        group_by(dataset_id, observacao_id) %>% 
-        arrange(profund_sup, .by_group = TRUE)  
-    }else if(input$maintabs == 'download'){
-      dados %>% select(vars_download)
-    }else{
-      dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
-        distinct(dataset_id, observacao_id, .keep_all = TRUE)
-    }
-  })
+  filtroEst <- 
+    reactive({ 
+      dados <- 
+        dados %>%
+        filter((dados$estado_id == input$est) & 
+                 ((profund_sup %in% input$profun[1]:input$profun[2]) & 
+                    (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf)) &
+                 (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
+      if (input$maintabs == 'priTab') {
+        dados %>% 
+          select(vars_localizacao) %>% 
+          distinct(dataset_id, observacao_id, .keep_all = TRUE)
+      } else if (input$maintabs == 'segTab') {
+        dados %>% 
+          select(!!!vars_analiticas) %>%
+          group_by(dataset_id, observacao_id) %>% 
+          arrange(profund_sup, .by_group = TRUE)  
+      } else if (input$maintabs == 'download') {
+        dados %>% 
+          select(vars_download)
+      } else {
+        dados %>% 
+          select(vars_localizacao, dataset_link, labelMap) %>% 
+          distinct(dataset_id, observacao_id, .keep_all = TRUE)
+      }
+    })
   
   # filtroCid, filtra as cidades que contem dentro do estado selecionado
   filtroCid <- reactive({
@@ -339,18 +343,18 @@ server <- function(input, output, session) {
                     (dados$profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
                   (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))) 
     
-    if(input$maintabs == 'priTab'){
+    if (input$maintabs == 'priTab') {
       dados %>% 
         select(vars_localizacao) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
-    }else if(input$maintabs == 'segTab'){
+    } else if (input$maintabs == 'segTab') {
       dados %>% 
         select(!!!vars_analiticas) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)
-    }else if(input$maintabs == 'download'){
+    } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
-    }else{
+    } else{
       dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
@@ -365,18 +369,18 @@ server <- function(input, output, session) {
                                     is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
                                 (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
     
-    if(input$maintabs == 'priTab'){
+    if (input$maintabs == 'priTab') {
       dados %>% 
         select(vars_localizacao) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
-    }else if(input$maintabs == 'segTab'){
+    } else if (input$maintabs == 'segTab') {
       dados %>% 
         select(!!!vars_analiticas) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)  
-    }else if(input$maintabs == 'download'){
+    } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
-    }else{
+    } else{
       dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
@@ -393,18 +397,18 @@ server <- function(input, output, session) {
                    (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
                (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
     
-    if(input$maintabs == 'priTab'){
+    if (input$maintabs == 'priTab') {
       dados %>% 
         select(vars_localizacao) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
-    }else if(input$maintabs == 'segTab'){
+    } else if (input$maintabs == 'segTab') {
       dados %>% 
         select(!!!vars_analiticas) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)  
-    }else if(input$maintabs == 'download'){
+    } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
-    }else{
+    } else{
       dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
@@ -419,14 +423,14 @@ server <- function(input, output, session) {
                    (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
                (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
     
-    if(input$maintabs == 'segTab'){
+    if (input$maintabs == 'segTab') {
       dados %>% select(!!!vars_analiticas)
-    }else if(input$maintabs == 'priTab'){
+    } else if (input$maintabs == 'priTab') {
       dados %>% select(vars_localizacao)%>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
-    }else if(input$maintabs == 'download'){
+    } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
-    }else{
+    } else{
       dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
@@ -465,19 +469,19 @@ server <- function(input, output, session) {
     if (input$est == 'Todos' && input$clasTox == 'Todos') {
       filtroTodos() %>% 
         dataTables()
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
+    } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))) {
       filtroEst() %>% 
         dataTables()
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
+    } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))) {
       filtroCid() %>% 
         dataTables()
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+    } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
       filtroEstTax() %>% 
         dataTables()
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
+    } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))) {
       filtroEstCidTax() %>% 
         dataTables()
-    }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+    } else if (((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
       filtroTax() %>% 
         dataTables()
     }
@@ -501,7 +505,7 @@ server <- function(input, output, session) {
         options = layersControlOptions(collapsed = TRUE)) %>%
       addMiniMap() 
     
-    if(input$est == 'Todos' && input$clasTox == 'Todos'){
+    if (input$est == 'Todos' && input$clasTox == 'Todos') {
       #tmp e uma variavel temporaria para nao precisar ativar o filtro com muita frequencia
       tmp <- filtroTodos()
       
@@ -509,23 +513,23 @@ server <- function(input, output, session) {
       # para adicionar os marcadores do mapa conforme for filtrado
       m %>% 
         marks(tmp)
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
+    } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))) {
       tmp <- filtroEst()
       m %>%
         marks(., tmp)
-    }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
+    } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))) {
       tmp <- filtroCid()    
       m %>%
         marks(., tmp)
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+    } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
       tmp <- filtroEstTax()      
       m %>%
         marks(., tmp)
-    }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
+    } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))) {
       tmp <- filtroEstCidTax()       
       m %>%
         marks(., tmp)
-    }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+    } else if (((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
       tmp <- filtroTax()      
       m %>%
         marks(., tmp)
@@ -548,23 +552,23 @@ server <- function(input, output, session) {
       paste('dados-febr-', Sys.Date(), ".", fileExt(), sep = ''),
     
     # funcao para escreve arquivo que sera descarregado aplicado a filtragem
-    content = function(file){
-      if(input$est == 'Todos' & input$clasTox == 'Todos'){
+    content = function(file) {
+      if (input$est == 'Todos' & input$clasTox == 'Todos') {
         write.table(filtroTodos(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
-      }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))){
+      } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))) {
         write.table(filtroEst(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
-      }else if(((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))){
+      } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))) {
         write.table(filtroCid(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
-      }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+      } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
         write.table(filtroEstTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
-      }else if(((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))){
+      } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))) {
         write.table(filtroEstCidTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
-      }else if(((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))){
+      } else if (((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
         write.table(filtroTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
       }
     }
