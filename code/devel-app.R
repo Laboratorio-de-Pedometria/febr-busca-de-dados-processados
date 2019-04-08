@@ -288,16 +288,17 @@ server <- function (input, output, session) {
           select(vars_localizacao) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
           mutate(
-            dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'> {dataset_id}</a>"))
+            dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
         
       } else if (input$maintabs == 'segTab') {
         # Para a tabela analitica, apresenta em condicao de ordem crescente da profundidade 
         my.data %>% 
           select(!!!vars_analiticas) %>%
-          group_by(dataset_id, observacao_id) %>% 
-          arrange(profund_sup, .by_group = TRUE) %>% 
           mutate(
-            dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'> {dataset_id}</a>"))
+            dataset_id = 
+              glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
+          group_by(dataset_id, observacao_id) %>% 
+          arrange(profund_sup, .by_group = TRUE)
         
       } else if (input$maintabs == 'download') {
         # Para a aba de download, seleciona a variavel que contem as informacoes para download definida no 
@@ -426,7 +427,7 @@ server <- function (input, output, session) {
       dados %>% 
         select(!!!vars_analiticas) %>%
         group_by(dataset_id, observacao_id) %>% 
-        arrange(profund_sup, .by_group = TRUE)  
+        arrange(profund_sup, .by_group = TRUE)
     } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
     } else {
@@ -446,9 +447,11 @@ server <- function (input, output, session) {
                (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
     
     if (input$maintabs == 'segTab') {
-      dados %>% select(!!!vars_analiticas)
+      dados %>% 
+        select(!!!vars_analiticas)
     } else if (input$maintabs == 'priTab') {
-      dados %>% select(vars_localizacao)%>% 
+      dados %>% 
+        select(vars_localizacao)%>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
