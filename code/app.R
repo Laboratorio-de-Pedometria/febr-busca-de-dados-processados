@@ -209,7 +209,7 @@ server <- function (input, output, session) {
       select(estado_id) %>% 
       unique() %>% 
       na.exclude()
-      updateSelectInput(session, "est", "UF", choices = c("Todos", estados))
+    updateSelectInput(session, "est", "UF", choices = c("Todos", estados))
   })
   
   # funcao reativa para atualizao o selectInput da cidade para apresentar 
@@ -272,41 +272,50 @@ server <- function (input, output, session) {
   # filtragem -------------------------------------------------------------------
   
   # filtroTodos, ,ultilizado quando o usuario nao altera os estado, cidade e taxonomia
-  filtroTodos <- reactive({
-    dados <- 
-      dados %>% 
+  filtroTodos <- 
+    reactive({
       # Esse filter é usado em todos filtros, ele diz se a profundade esta entre o input profun
       # filtra tambem, os anos da observacao_data, se estao entre o input data
       # essa filtragem de profundidade e ano tambem eh aplicada nos outros filtros abaixo
-      filter((((dados$profund_sup %in% input$profun[1]:input$profun[2]) & 
-                 (dados$profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
-               (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))  
-    
-    #Condicoes para apresentacao das abas
-    if (input$maintabs == 'priTab') {
-      # Para a tabela localizacao, remove-se as observacoes repetidas 
-      dados %>% 
-        select(vars_localizacao) %>% 
-        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+      my.data <-
+        dados %>%   
+        dplyr::filter(
+          profund_sup %in% input$profun[1]:input$profun[2] & 
+            profund_inf %in% input$profun[1]:input$profun[2] | 
+            is.na(profund_sup) | 
+            is.na(profund_inf) &
+            year(observacao_data) %in% input$data[1]:input$data[2] | 
+            is.na(observacao_data))
       
-    } else if (input$maintabs == 'segTab') {
-      # Para a tabela analitica, apresenta em condicao de ordem crescente da profundidade 
-      dados %>% 
-        select(!!!vars_analiticas) %>%
-        group_by(dataset_id, observacao_id) %>% 
-        arrange(profund_sup, .by_group = TRUE)  
-      
-    } else if (input$maintabs == 'download') {
-      # Para a aba de download, seleciona a variavel que contem as informacoes para download definida no comeco do codigo
-      dados %>% select(vars_download)
-      
-    } else{
-      # Para a aba do mapa, Apresenta as variaveis para plotagem no mapa, apresentar o label e o popup corretamente
-      # removendo tambem, as observacoes repetidas
-      dados %>% select(vars_localizacao, dataset_link, labelMap) %>% 
-        distinct(dataset_id, observacao_id, .keep_all = TRUE)
-    }
-  })
+      #Condicoes para apresentacao das abas
+      if (input$maintabs == 'priTab') {
+        # Para a tabela localizacao, remove-se as observacoes repetidas 
+        my.data %>% 
+          select(vars_localizacao) %>% 
+          distinct(dataset_id, observacao_id, .keep_all = TRUE)
+        
+      } else if (input$maintabs == 'segTab') {
+        # Para a tabela analitica, apresenta em condicao de ordem crescente da profundidade 
+        my.data %>% 
+          select(!!!vars_analiticas) %>%
+          group_by(dataset_id, observacao_id) %>% 
+          arrange(profund_sup, .by_group = TRUE)  
+        
+      } else if (input$maintabs == 'download') {
+        # Para a aba de download, seleciona a variavel que contem as informacoes para download definida no 
+        # comeco do codigo
+        my.data %>% 
+          select(vars_download)
+        
+      } else{
+        # Para a aba do mapa, Apresenta as variaveis para plotagem no mapa, apresentar o label e o popup 
+        # corretamente
+        # removendo tambem, as observacoes repetidas
+        my.data %>% 
+          select(vars_localizacao, dataset_link, labelMap) %>% 
+          distinct(dataset_id, observacao_id, .keep_all = TRUE)
+      }
+    })
   
   # Filtro de UF ----
   # filtroEst, filtra os estados, 
@@ -314,35 +323,31 @@ server <- function (input, output, session) {
   filtroEst <- 
     reactive({ 
       my.data <-
-        # dados <- 
         dados %>%
-        dplyr::filter(
-          (dados$estado_id == input$est) &
-            ((profund_sup %in% input$profun[1]:input$profun[2]) &
-               (profund_inf %in% input$profun[1]:input$profun[2]) |
-               is.na(dados$profund_sup) |
-               is.na(dados$profund_inf)) &
-            (year(dados$observacao_data) %in% input$data[1]:input$data[2] |
-               is.na(dados$observacao_data))
-        )
+        dplyr::filter(estado_id %in% input$est)
+      # dplyr::filter(
+      # (dados$estado_id == input$est) &
+      # ((profund_sup %in% input$profun[1]:input$profun[2]) &
+      # (profund_inf %in% input$profun[1]:input$profun[2]) |
+      # is.na(dados$profund_sup) |
+      # is.na(dados$profund_inf)) &
+      # (year(dados$observacao_data) %in% input$data[1]:input$data[2] |
+      # is.na(dados$observacao_data))
+      # )
       if (input$maintabs == 'priTab') {
         my.data %>% 
-          # dados %>% 
           select(vars_localizacao) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       } else if (input$maintabs == 'segTab') {
         my.data %>% 
-          # dados %>% 
           select(!!!vars_analiticas) %>%
           group_by(dataset_id, observacao_id) %>% 
           arrange(profund_sup, .by_group = TRUE)  
       } else if (input$maintabs == 'download') {
         my.data %>% 
-          # dados %>% 
           select(vars_download)
       } else {
         my.data %>% 
-          # dados %>% 
           select(vars_localizacao, dataset_link, labelMap) %>%
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
