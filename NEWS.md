@@ -3,3 +3,4 @@
 * Altera o nome do documento de código principal para `app.R`.
 * Adiciona metadados aos documento de código principal.
 * Organiza o código fonte para facilitar a leitura (recuos, espaços).
+* Links para conjuntos de dados agora são gerados _on-the-fly_.
