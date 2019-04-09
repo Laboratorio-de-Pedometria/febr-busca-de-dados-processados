@@ -5,7 +5,7 @@
 * Organiza o código fonte para facilitar a leitura (recuos, espaços).
 * Links para conjuntos de dados agora são gerados _on-the-fly_.
 
-# Versão 0.2.0 (2019-03-09)
+# Versão 0.2.1 (2019-03-09)
 * Renomeie o Id do downloadButton de 'download' para 'outDown'
 * Erro do download resolvido (alterei 'file = filename' para  'file')
 * Alterei 'filename <- function' para 'filename = function'
