@@ -1,3 +1,7 @@
+# Versão 0.2.2 (2019-03-09)
+* Organiza código para facilitar a leitura.
+* Cria objeto para armazenar definição de língua de `DT::datatable`.
+
 # Versão 0.2.1 (2019-03-09)
 * Renomeie o Id do downloadButton de 'download' para 'outDown'
 * Erro do download resolvido (alterei 'file = filename' para  'file')

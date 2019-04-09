@@ -1,5 +1,5 @@
 # Title: Repositório Brasileiro Livre para Dados Abertos do Solo - aplicação Shiny
-# Version: 0.2.1
+# Version: 0.2.2
 # Date: 2019-03-09
 # Authors: Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br),
 #          Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br)
@@ -31,6 +31,9 @@ sep_dec <- ','
 sep_col <- '\t'
 
 febr_catalog <- "http://coral.ufsm.br/febr/catalog/"
+
+# Definição de língua a ser utilizada nas tabelas geradas usando DT::datatable
+dt_lang <- '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'
 
 # Descarregamento dos dados -------------------------
 
@@ -162,7 +165,7 @@ server <- function (input, output, session) {
           DT::datatable(
             filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
             options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-                           language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'))) %>%
+                           language = list(url = dt_lang))) %>%
           # Função para alterar separador decimal
           formatCurrency(., c('coord_x', 'coord_y'), currency = "", digits = 8, dec.mark = ',')
       } else if (input$maintabs == 'segTab') {
@@ -170,9 +173,8 @@ server <- function (input, output, session) {
           DT::datatable(
             filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
             options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
-                           language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'))) %>%
-          formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'),
-                         currency = "", digits = 1, dec.mark = ',')
+                           language = list(url = dt_lang))) %>%
+          formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'), currency = "", digits = 1, dec.mark = ',')
       }
     }
   
@@ -222,17 +224,22 @@ server <- function (input, output, session) {
     if (input$cid != 'Todos') {
       classificacao <- dados %>% 
         filter((dados$estado_id == input$est) & (dados$municipio_id == input$cid )) %>% 
-        select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
+        select(taxon_sibcs) %>%
+        arrange(-desc(taxon_sibcs))
       updateSelectInput(session, "clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
       
     } else if (input$est == 'Todos') {
-      classificacao <- dados %>% select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
+      classificacao <- 
+        dados %>% 
+        select(taxon_sibcs) %>% 
+        arrange(-desc(taxon_sibcs))
       updateSelectInput(session, "clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
       
     } else if (input$est != 'Todos') {
       classificacao <- dados %>% 
         filter(dados$estado_id == input$est) %>% 
-        select(taxon_sibcs) %>% arrange(-desc(taxon_sibcs))
+        select(taxon_sibcs) %>% 
+        arrange(-desc(taxon_sibcs))
       updateSelectInput(session, "clasTox", "Taxonomia", choices = c("Todos", unique(classificacao)))
     }
   })
