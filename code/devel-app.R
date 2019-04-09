@@ -124,13 +124,14 @@ ui <-
                          # radioButtons('formato', h3('Clique no botão para descarregar os dados: '), 
                          # tags$br(), inline = TRUE, choices = c('TXT')), 
                         style = 'text-align:center', tags$br(), 
-                        downloadButton(outputId = 'download', label = 'Descarregar', class = 'dlb'),
+                        downloadButton(outputId = 'outDown', label = 'Descarregar', class = 'dlb'),
                         tags$head(tags$style(".dlb{width: 100%;}"))
                       )
                     )
                   )
                 ),
-          tabPanel(title = tags$h3('Avalie'), value = 'avaliacao', tags$br(),
+         
+           tabPanel(title = tags$h3('Avalie'), value = 'avaliacao', tags$br(),
                    fluidRow(
                      column(
                        width = 8, offset = 2,
@@ -571,10 +572,10 @@ server <- function (input, output, session) {
   #           'TXT' = 'txt')
   # })
   
-  output$download <- downloadHandler(
+  output$outDown <- downloadHandler(
     
     # funcao para o nome do arquivo que esta sendo descarregado
-    filename <- function () {
+    filename = function () {
       # paste('dados-febr-', Sys.Date(), ".", fileExt(), sep = '')
       paste('dados-febr-', Sys.Date(), ".", "txt", sep = '')
     },
@@ -582,22 +583,22 @@ server <- function (input, output, session) {
     # funcao para escreve arquivo que sera descarregado aplicado a filtragem
     content = function (file) {
       if (input$est == 'Todos' & input$clasTox == 'Todos') {
-        write.table(filtroTodos(), file = filename, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        write.table(filtroTodos(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
       } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))) {
-        write.table(filtroEst(), file = filename, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        write.table(filtroEst(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
       } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))) {
-        write.table(filtroCid(), file = filename, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        write.table(filtroCid(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
       } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
-        write.table(filtroEstTax(), file = filename, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        write.table(filtroEstTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
       } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))) {
-        write.table(filtroEstCidTax(), file = filename, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        write.table(filtroEstCidTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
         
       } else if (((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
-        write.table(filtroTax(), file = filename, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        write.table(filtroTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
       }
     }
   )
