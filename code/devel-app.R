@@ -53,12 +53,30 @@ vars_localizacao <-
 
 #variavel para apresentacao da tabela analitica
 # função sym: EXPLICAR ESTRETÉGIA USADA PARA RENOMEAR COLUNAS
-vars_analiticas <-
-  c('dataset_id',
-    # 'dataset_id' = sym('dataset_id_ap'), 
-    'observacao_id', 'profund_sup', 'profund_inf',
-    list('Terra fina' = sym('terrafina'), Argila = sym('argila'), Silte = sym('silte'), Areia = sym('areia'),
-         Carbono = sym('carbono'), CTC = sym('ctc'), pH = sym('ph'), CE = sym('ce'), DSI = sym('dsi')))
+vars_lab <-
+  c('dataset_id', 'observacao_id', 'profund_sup', 'profund_inf',
+    'terrafina', 'argila', 'silte', 'areia', 'carbono', 'ctc', 'ph', 'ce', 'dsi')
+vars_lab_name <- 
+  c("Código de identificação do conjunto de dados no repositório",
+    "Código de identificação da observação do solo no conjunto de dados",
+    "Profundidade superior da camada (cm)",
+    "Profundidade inferior da camada (cm)",
+    "Conteúdo de terra fina (g/kg)",
+    "Conteúdo de argila (g/kg)",
+    "Conteúdo de silte (g/kg)",
+    "Conteúdo de areia (g/kg)",
+    "Conteúdo de carbono (g/kg)",
+    "Capacidade de troca de cátions potencial (cmol<sub>c</sub>/kg)",
+    "pH em água (adimensional)",
+    "Condutividade elétrica (mS/cm)",
+    "Densidade do solo inteiro (kg/dm<sup>3</sup>)") %>% 
+  paste("<code>", vars_lab, "</code>", ": ", ., ". ", sep = "", collapse = " ")
+# vars_lab <-
+#   c('dataset_id',
+#     # 'dataset_id' = sym('dataset_id_ap'), 
+#     'observacao_id', 'profund_sup', 'profund_inf',
+#     list('Terra fina' = sym('terrafina'), Argila = sym('argila'), Silte = sym('silte'), Areia = sym('areia'),
+#          Carbono = sym('carbono'), CTC = sym('ctc'), pH = sym('ph'), CE = sym('ce'), DSI = sym('dsi')))
 
 #Variavel para fazer o descarregamento
 vars_download <-
@@ -117,7 +135,10 @@ ui <-
             # tags$br(),
             tags$p(class = 'lead'), 
             # tags$hr(), 
-            DT::dataTableOutput("outDadosSeg")
+            DT::dataTableOutput("outDadosSeg"),
+            tags$br(),
+            tags$hr(), 
+            HTML(vars_lab_name)
           ),
           
           # Aba "Localização" ----
@@ -214,7 +235,9 @@ server <- function (input, output, session) {
             filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
             options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
                            language = list(url = dt_lang))) %>%
-          formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'), currency = "", digits = 1, dec.mark = ',')
+          formatCurrency(., c('carbono', 'ctc', 'ph', 'ce', 'dsi'), currency = "", digits = 1, dec.mark = ',')
+          # formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'), currency = "", digits = 1, dec.mark = ',')
+        
       }
     }
   
@@ -343,7 +366,7 @@ server <- function (input, output, session) {
       } else if (input$maintabs == 'segTab') {
         # Para a tabela analitica, apresenta em condicao de ordem crescente da profundidade 
         my.data %>% 
-          select(!!!vars_analiticas) %>%
+          select(!!!vars_lab) %>%
           mutate(
             dataset_id = 
               glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
@@ -392,7 +415,7 @@ server <- function (input, output, session) {
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       } else if (input$maintabs == 'segTab') {
         my.data %>% 
-          select(!!!vars_analiticas) %>%
+          select(!!!vars_lab) %>%
           group_by(dataset_id, observacao_id) %>% 
           arrange(profund_sup, .by_group = TRUE)  
       } else if (input$maintabs == 'download') {
@@ -419,7 +442,7 @@ server <- function (input, output, session) {
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
-        select(!!!vars_analiticas) %>%
+        select(!!!vars_lab) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)
     } else if (input$maintabs == 'download') {
@@ -446,7 +469,7 @@ server <- function (input, output, session) {
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
-        select(!!!vars_analiticas) %>%
+        select(!!!vars_lab) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)  
     } else if (input$maintabs == 'download') {
@@ -475,7 +498,7 @@ server <- function (input, output, session) {
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
-        select(!!!vars_analiticas) %>%
+        select(!!!vars_lab) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)
     } else if (input$maintabs == 'download') {
@@ -498,7 +521,7 @@ server <- function (input, output, session) {
     
     if (input$maintabs == 'segTab') {
       dados %>% 
-        select(!!!vars_analiticas)
+        select(!!!vars_lab)
     } else if (input$maintabs == 'priTab') {
       dados %>% 
         select(vars_localizacao)%>% 
