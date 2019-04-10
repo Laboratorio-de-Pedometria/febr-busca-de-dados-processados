@@ -45,11 +45,19 @@ dados <-
 # Definindo Variaveis ------------------------
 
 # Variavel para apresentacao da tabela localizacao
-vars_localizacao <- 
-  c('dataset_id',
-    # 'dataset_id' = 'dataset_id_ap',
-    'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'taxon_sibcs',
+vars_info <- 
+  c('dataset_id', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'taxon_sibcs',
     'municipio_id', 'estado_id')
+vars_info_name <- 
+  c("Código de identificação do conjunto de dados no repositório",
+    "Código de identificação da observação do solo no conjunto de dados",
+    "Data de observação do solo",
+    "Longitude (SIRGAS 2000, graus)",
+    "Latitude (SIRGAS 2000, graus)",
+    "Classificação taxonômica pelo Sistema Brasileiro de Classificação de Solos",
+    "Nome do município onde a observação do solo foi realizada",
+    "Sigla da unidade federativa onde a observação do solo foi realizada") %>% 
+  paste("<code>", vars_info, "</code>", ": ", ., ". ", sep = "", collapse = " ")
 
 #variavel para apresentacao da tabela analitica
 # função sym: EXPLICAR ESTRETÉGIA USADA PARA RENOMEAR COLUNAS
@@ -125,7 +133,10 @@ ui <-
             # tags$br(),
             tags$p(class = 'lead'), 
             # tags$hr(), 
-            DT::dataTableOutput("outDados")
+            DT::dataTableOutput("outDados"),
+            tags$br(),
+            tags$hr(), 
+            HTML(vars_info_name)
           ),
           
           # Aba "Dados analiticos" ----
@@ -358,7 +369,7 @@ server <- function (input, output, session) {
       if (input$maintabs == 'priTab') {
         # Para a tabela localizacao, remove-se as observacoes repetidas 
         my.data %>% 
-          select(vars_localizacao) %>% 
+          select(vars_info) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
           mutate(
             dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
@@ -384,7 +395,7 @@ server <- function (input, output, session) {
         # corretamente
         # removendo tambem, as observacoes repetidas
         my.data %>% 
-          select(vars_localizacao) %>% 
+          select(vars_info) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
     })
@@ -411,7 +422,7 @@ server <- function (input, output, session) {
         )
       if (input$maintabs == 'priTab') {
         my.data %>% 
-          select(vars_localizacao) %>% 
+          select(vars_info) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       } else if (input$maintabs == 'segTab') {
         my.data %>% 
@@ -423,7 +434,7 @@ server <- function (input, output, session) {
           select(vars_download)
       } else {
         my.data %>% 
-          select(vars_localizacao) %>%
+          select(vars_info) %>%
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
     })
@@ -438,7 +449,7 @@ server <- function (input, output, session) {
     
     if (input$maintabs == 'priTab') {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
@@ -449,7 +460,7 @@ server <- function (input, output, session) {
       dados %>% select(vars_download)
     } else {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -465,7 +476,7 @@ server <- function (input, output, session) {
     
     if (input$maintabs == 'priTab') {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
@@ -476,7 +487,7 @@ server <- function (input, output, session) {
       dados %>% select(vars_download)
     } else {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -494,7 +505,7 @@ server <- function (input, output, session) {
     
     if (input$maintabs == 'priTab') {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
@@ -505,7 +516,7 @@ server <- function (input, output, session) {
       dados %>% select(vars_download)
     } else {
       dados %>%
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -524,13 +535,13 @@ server <- function (input, output, session) {
         select(!!!vars_lab)
     } else if (input$maintabs == 'priTab') {
       dados %>% 
-        select(vars_localizacao)%>% 
+        select(vars_info)%>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
     } else {
       dados %>%
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
