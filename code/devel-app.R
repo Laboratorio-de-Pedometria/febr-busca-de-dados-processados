@@ -99,59 +99,86 @@ ui <-
         tabsetPanel(
           id = 'maintabs',
           # Primeira aba "Localizaocao"          
-          tabPanel(title = tags$h3('Localização'), value = 'priTab', tags$br(),
-                   tags$p(class = 'lead'), tags$hr(), DT::dataTableOutput("outDados")),
+          tabPanel(
+            title = tags$h3('Localização'), value = 'priTab', 
+            # tags$br(),
+            tags$p(class = 'lead'), 
+            # tags$hr(), 
+            DT::dataTableOutput("outDados")),
           
           # Segunda aba "Dados analiticos"
-          tabPanel(title = tags$h3('Dados analíticos'), value = 'segTab', tags$br(),
-                   tags$p(class = 'lead'), tags$hr(), DT::dataTableOutput("outDadosSeg")),
+          tabPanel(
+            title = tags$h3('Dados analíticos'), value = 'segTab', 
+            # tags$br(),
+            tags$p(class = 'lead'), 
+            # tags$hr(), 
+            DT::dataTableOutput("outDadosSeg")),
           
           # output mapa
           # Terceira aba "Mapa"
-          tabPanel(title = tags$h3('Mapa'), value = 'map',
-                   fluidRow(
-                     column(
-                       width = 12, tags$br(), tags$hr(),
-                       leafletOutput('outMapa', width = '100%', height = '600'),
-                       actionButton("reset_button", "Ver tudo"),
-                       tags$style("#reset_button {float:left; margin-top:-45px; margin-left:20px; position:relative;}"),
-                       tags$br()))),
+          tabPanel(
+            title = tags$h3('Mapa'), value = 'map',
+            fluidRow(
+              column(
+                width = 12, 
+                tags$br(),
+                # tags$hr(),
+                leafletOutput('outMapa', width = '100%', height = '600'),
+                actionButton("reset_button", "Ver tudo"),
+                tags$style("#reset_button {float:left; margin-top:-45px; margin-left:20px; position:relative;}"),
+                tags$br()))),
           
           # Tab Download
           # Quarta aba "Descarregar"             
-          tabPanel(title = tags$h3('Descarregar'), value = 'download', tags$br(), tags$hr(),
-                   fluidRow(
-                     tags$br(),
-                     column(
-                       width = 6, offset = 3, 
-                       wellPanel(
-                         tags$br(), h3('Clique no botão abaixo para descarregar os dados: '), tags$br(), 
-                         # radioButtons('formato', h3('Clique no botão para descarregar os dados: '), 
-                         # tags$br(), inline = TRUE, choices = c('TXT')), 
-                        style = 'text-align:center', tags$br(), 
-                        downloadButton(outputId = 'outDown', label = 'Descarregar', class = 'dlb'),
-                        tags$head(tags$style(".dlb{width: 100%;}"))
-                      )
-                    )
-                  )
-                ),
-         
-           tabPanel(title = tags$h3('Avalie'), value = 'avaliacao', tags$br(),
-                   fluidRow(
-                     column(
-                       width = 8, offset = 2,
-                       wellPanel(tags$br(), 
-                                 h3('Olá, tudo bem ?'), tags$br(),
-                                 p('Obrigado por ultilizar nosso nova ferramenta de busca e visualização.', br(), 
-                                                      'Neste período de testes pedimos para que você nos dê sugestões para 
-                                                      melhorarmos esta ferramenta. Para poder avaliar, clique ', 
-                                   a(href = link_avaliacao, 'aqui.'), br(),
-                                   'Muito obrigado!'),
-                                 tags$br() ))))
+          tabPanel(
+            title = tags$h3('Descarregar'), value = 'download', 
+            tags$br(), 
+            # tags$hr(),
+            fluidRow(
+              # tags$br(),
+              column(
+                width = 6, offset = 3, 
+                wellPanel(
+                  tags$br(), h3('Clique no botão abaixo para descarregar os dados: '), tags$br(), 
+                  # radioButtons('formato', h3('Clique no botão para descarregar os dados: '), 
+                  # tags$br(), inline = TRUE, choices = c('TXT')), 
+                  style = 'text-align:center', tags$br(), 
+                  downloadButton(outputId = 'outDown', label = 'Descarregar', class = 'dlb'),
+                  tags$head(tags$style(".dlb{width: 100%;}"))
+                )
+              )
+            )
+          ),
+          
+          tabPanel(
+            title = tags$h3('Deixe sua opinião'), 
+            value = 'avaliacao', 
+            tags$br(),
+            fluidRow(
+              column(
+                width = 8, 
+                offset = 2,
+                wellPanel(
+                  tags$br(), 
+                  h3('Olá, tudo bem?'),
+                  tags$br(),
+                  p('Esperamos que você tenha gostado da nova ferramenta de busca e visualização de dados.', 
+                    br(),
+                    'Mas nós sabemos que você deve ter ótimas ideias para deixá-la ainda melhor.',
+                    br(),
+                    'Acesse o formulário que preparamos em',
+                    a(href = 'https://forms.gle/ZxeeiHF487JR5hm57', 'https://forms.gle/ZxeeiHF487JR5hm57'),
+                    ' e deixe a sua opinião.',
+                    br(),
+                    'São apenas 5 minutinhos!')
+                )
+              )
+            )
           )
         )
       )
     )
+  )
 
 server <- function (input, output, session) {
   
