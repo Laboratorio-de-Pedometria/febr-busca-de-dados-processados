@@ -608,10 +608,11 @@ server <- function (input, output, session) {
       #addResetMapButton() %>% 
       #setView(lng = -50.8663589, lat = -12.9214564, zoom = 4) %>%
       addProviderTiles("Esri.WorldStreetMap", group = "Esri.WorldStreetMap") %>% 
-      addProviderTiles("CartoDB.Positron", group = "CartoDB.Positron") %>% 
+      # addProviderTiles("CartoDB.Positron", group = "CartoDB.Positron") %>% 
       addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
       addLayersControl(
-        baseGroups = c("Esri.WorldStreetMap", "CartoDB.Positron", "Esri.WorldImagery"),
+        baseGroups = c("Esri.WorldStreetMap", "Esri.WorldImagery"),
+        # baseGroups = c("Esri.WorldStreetMap", "CartoDB.Positron", "Esri.WorldImagery"),
         options = layersControlOptions(collapsed = TRUE)) %>%
       addMiniMap() 
     
