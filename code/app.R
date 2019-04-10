@@ -1,5 +1,5 @@
 # Title: Repositório Brasileiro Livre para Dados Abertos do Solo - aplicação Shiny
-# Version: 0.2.2
+# Version: 0.2.3
 # Date: 2019-03-09
 # Authors: Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br),
 #          Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br)
@@ -45,20 +45,46 @@ dados <-
 # Definindo Variaveis ------------------------
 
 # Variavel para apresentacao da tabela localizacao
-vars_localizacao <- 
-  c('dataset_id',
-    # 'dataset_id' = 'dataset_id_ap',
-    'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'taxon_sibcs',
+vars_info <- 
+  c('dataset_id', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'taxon_sibcs',
     'municipio_id', 'estado_id')
+vars_info_name <- 
+  c("Código de identificação do conjunto de dados no repositório",
+    "Código de identificação da observação do solo no conjunto de dados",
+    "Data de observação do solo",
+    "Longitude (SIRGAS 2000, graus)",
+    "Latitude (SIRGAS 2000, graus)",
+    "Classificação taxonômica pelo Sistema Brasileiro de Classificação de Solos",
+    "Nome do município onde a observação do solo foi realizada",
+    "Sigla da unidade federativa onde a observação do solo foi realizada") %>% 
+  paste("<code>", vars_info, "</code>", ": ", ., ". ", sep = "", collapse = " ")
 
 #variavel para apresentacao da tabela analitica
 # função sym: EXPLICAR ESTRETÉGIA USADA PARA RENOMEAR COLUNAS
-vars_analiticas <-
-  c('dataset_id',
-    # 'dataset_id' = sym('dataset_id_ap'), 
-    'observacao_id', 'profund_sup', 'profund_inf',
-    list('Terra fina' = sym('terrafina'), Argila = sym('argila'), Silte = sym('silte'), Areia = sym('areia'),
-         Carbono = sym('carbono'), CTC = sym('ctc'), pH = sym('ph'), CE = sym('ce'), DSI = sym('dsi')))
+vars_lab <-
+  c('dataset_id', 'observacao_id', 'profund_sup', 'profund_inf',
+    'terrafina', 'argila', 'silte', 'areia', 'carbono', 'ctc', 'ph', 'ce', 'dsi')
+vars_lab_name <- 
+  c("Código de identificação do conjunto de dados no repositório",
+    "Código de identificação da observação do solo no conjunto de dados",
+    "Profundidade superior da camada (cm)",
+    "Profundidade inferior da camada (cm)",
+    "Conteúdo de terra fina (g/kg)",
+    "Conteúdo de argila (g/kg)",
+    "Conteúdo de silte (g/kg)",
+    "Conteúdo de areia (g/kg)",
+    "Conteúdo de carbono (g/kg)",
+    "Capacidade de troca de cátions potencial (cmol<sub>c</sub>/kg)",
+    "pH em água (adimensional)",
+    "Condutividade elétrica (mS/cm)",
+    "Densidade do solo inteiro (kg/dm<sup>3</sup>)") %>% 
+  paste("<code>", vars_lab, "</code>", ": ", ., ". ", sep = "", collapse = " ")
+# vars_lab <-
+#   c('dataset_id',
+#     # 'dataset_id' = sym('dataset_id_ap'), 
+#     'observacao_id', 'profund_sup', 'profund_inf',
+#     list('Terra fina' = sym('terrafina'), Argila = sym('argila'), Silte = sym('silte'), Areia = sym('areia'),
+#          Carbono = sym('carbono'), CTC = sym('ctc'), pH = sym('ph'), CE = sym('ce'), DSI = sym('dsi')))
 
 #Variavel para fazer o descarregamento
 vars_download <-
@@ -98,60 +124,106 @@ ui <-
         width = 9,
         tabsetPanel(
           id = 'maintabs',
-          # Primeira aba "Localizaocao"          
-          tabPanel(title = tags$h3('Localização'), value = 'priTab', tags$br(),
-                   tags$p(class = 'lead'), tags$hr(), DT::dataTableOutput("outDados")),
           
-          # Segunda aba "Dados analiticos"
-          tabPanel(title = tags$h3('Dados analíticos'), value = 'segTab', tags$br(),
-                   tags$p(class = 'lead'), tags$hr(), DT::dataTableOutput("outDadosSeg")),
-          
-          # output mapa
-          # Terceira aba "Mapa"
-          tabPanel(title = tags$h3('Mapa'), value = 'map',
-                   fluidRow(
-                     column(
-                       width = 12, tags$br(), tags$hr(),
-                       leafletOutput('outMapa', width = '100%', height = '600'),
-                       actionButton("reset_button", "Ver tudo"),
-                       tags$style("#reset_button {float:left; margin-top:-45px; margin-left:20px; position:relative;}"),
-                       tags$br()))),
-          
-          # Tab Download
-          # Quarta aba "Descarregar"             
-          tabPanel(title = tags$h3('Descarregar'), value = 'download', tags$br(), tags$hr(),
-                   fluidRow(
-                     tags$br(),
-                     column(
-                       width = 6, offset = 3, 
-                       wellPanel(
-                         tags$br(), h3('Clique no botão abaixo para descarregar os dados: '), tags$br(), 
-                         # radioButtons('formato', h3('Clique no botão para descarregar os dados: '), 
-                         # tags$br(), inline = TRUE, choices = c('TXT')), 
-                         style = 'text-align:center', tags$br(), 
-                         downloadButton(outputId = 'outDown', label = 'Descarregar', class = 'dlb'),
-                         tags$head(tags$style(".dlb{width: 100%;}"))
-                       )
-                     )
-                   )
+          # Aba "Informações gerais" ----
+          tabPanel(
+            # title = tags$h3('Localização'),
+            title = tags$h3('Informações gerais'),
+            value = 'priTab', 
+            # tags$br(),
+            tags$p(class = 'lead'), 
+            # tags$hr(), 
+            DT::dataTableOutput("outDados"),
+            tags$br(),
+            tags$hr(), 
+            HTML(vars_info_name)
           ),
           
-          tabPanel(title = tags$h3('Avalie'), value = 'avaliacao', tags$br(),
-                   fluidRow(
-                     column(
-                       width = 8, offset = 2,
-                       wellPanel(tags$br(), 
-                                 h3('Olá, tudo bem ?'), tags$br(),
-                                 p('Obrigado por ultilizar nosso nova ferramenta de busca e visualização.', br(), 
-                                   'Neste período de testes pedimos para que você nos dê sugestões para 
-                                   melhorarmos esta ferramenta. Para poder avaliar, clique ', 
-                                   a(href = link_avaliacao, 'aqui.'), br(),
-                                   'Muito obrigado!'),
-                                 tags$br() ))))
+          # Aba "Dados analiticos" ----
+          tabPanel(
+            title = tags$h3('Dados analíticos'),
+            value = 'segTab', 
+            # tags$br(),
+            tags$p(class = 'lead'), 
+            # tags$hr(), 
+            DT::dataTableOutput("outDadosSeg"),
+            tags$br(),
+            tags$hr(), 
+            HTML(vars_lab_name)
+          ),
+          
+          # Aba "Localização" ----
+          tabPanel(
+            # title = tags$h3('Mapa'),
+            title = tags$h3('Localização'),
+            value = 'map',
+            fluidRow(
+              column(
+                width = 12, 
+                tags$br(),
+                # tags$hr(),
+                leafletOutput('outMapa', width = '100%', height = '600'),
+                actionButton("reset_button", "Ver tudo"),
+                tags$style("#reset_button {float:left; margin-top:-45px; margin-left:20px; position:relative;}")
+                # ),
+                # tags$br()
+              )
+            )
+          ),
+          
+          # Aba 'Descarregar' ----
+          tabPanel(
+            title = tags$h3('Descarregar'), value = 'download', 
+            tags$br(), 
+            # tags$hr(),
+            fluidRow(
+              # tags$br(),
+              column(
+                width = 6, offset = 3, 
+                wellPanel(
+                  tags$br(), 
+                  h3('Clique no botão abaixo para descarregar os dados'), 
+                  tags$br(), 
+                  # radioButtons('formato', h3('Clique no botão para descarregar os dados: '), 
+                  # tags$br(), inline = TRUE, choices = c('TXT')), 
+                  style = 'text-align:center', 
+                  tags$br(),
+                  downloadButton(outputId = 'outDown', label = 'Descarregar', class = 'dlb'),
+                  tags$head(tags$style(".dlb{width: 100%;}"))
+                )
+              )
+            )
+          ),
+          
+          tabPanel(
+            title = tags$h3('Deixe sua opinião'), 
+            value = 'avaliacao', 
+            tags$br(),
+            fluidRow(
+              column(
+                width = 8, 
+                offset = 2,
+                wellPanel(
+                  tags$br(), 
+                  h3('Olá, tudo bem?'),
+                  tags$br(),
+                  p('Esperamos que você tenha gostado da nova ferramenta de busca e visualização de dados.', 
+                    br(),
+                    'Mas nós sabemos que você deve ter ótimas ideias para deixá-la ainda melhor.',
+                    br(),
+                    'Acesse o formulário que preparamos em',
+                    a(href = 'https://forms.gle/ZxeeiHF487JR5hm57', 'https://forms.gle/ZxeeiHF487JR5hm57'),
+                    ' e deixe a sua opinião.',
+                    br(),
+                    'São apenas 5 minutinhos!')
+                )
+              )
+            )
+          )
         )
       )
-      )
-          )
+    )
+  )
 
 server <- function (input, output, session) {
   
@@ -174,7 +246,9 @@ server <- function (input, output, session) {
             filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
             options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
                            language = list(url = dt_lang))) %>%
-          formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'), currency = "", digits = 1, dec.mark = ',')
+          formatCurrency(., c('carbono', 'ctc', 'ph', 'ce', 'dsi'), currency = "", digits = 1, dec.mark = ',')
+        # formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'), currency = "", digits = 1, dec.mark = ',')
+        
       }
     }
   
@@ -295,7 +369,7 @@ server <- function (input, output, session) {
       if (input$maintabs == 'priTab') {
         # Para a tabela localizacao, remove-se as observacoes repetidas 
         my.data %>% 
-          select(vars_localizacao) %>% 
+          select(vars_info) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
           mutate(
             dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
@@ -303,7 +377,7 @@ server <- function (input, output, session) {
       } else if (input$maintabs == 'segTab') {
         # Para a tabela analitica, apresenta em condicao de ordem crescente da profundidade 
         my.data %>% 
-          select(!!!vars_analiticas) %>%
+          select(!!!vars_lab) %>%
           mutate(
             dataset_id = 
               glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
@@ -321,7 +395,7 @@ server <- function (input, output, session) {
         # corretamente
         # removendo tambem, as observacoes repetidas
         my.data %>% 
-          select(vars_localizacao) %>% 
+          select(vars_info) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
     })
@@ -348,11 +422,11 @@ server <- function (input, output, session) {
         )
       if (input$maintabs == 'priTab') {
         my.data %>% 
-          select(vars_localizacao) %>% 
+          select(vars_info) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       } else if (input$maintabs == 'segTab') {
         my.data %>% 
-          select(!!!vars_analiticas) %>%
+          select(!!!vars_lab) %>%
           group_by(dataset_id, observacao_id) %>% 
           arrange(profund_sup, .by_group = TRUE)  
       } else if (input$maintabs == 'download') {
@@ -360,7 +434,7 @@ server <- function (input, output, session) {
           select(vars_download)
       } else {
         my.data %>% 
-          select(vars_localizacao) %>%
+          select(vars_info) %>%
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
     })
@@ -375,18 +449,18 @@ server <- function (input, output, session) {
     
     if (input$maintabs == 'priTab') {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
-        select(!!!vars_analiticas) %>%
+        select(!!!vars_lab) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)
     } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
     } else {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -402,18 +476,18 @@ server <- function (input, output, session) {
     
     if (input$maintabs == 'priTab') {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
-        select(!!!vars_analiticas) %>%
+        select(!!!vars_lab) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)  
     } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
     } else {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -431,18 +505,18 @@ server <- function (input, output, session) {
     
     if (input$maintabs == 'priTab') {
       dados %>% 
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'segTab') {
       dados %>% 
-        select(!!!vars_analiticas) %>%
+        select(!!!vars_lab) %>%
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)
     } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
     } else {
       dados %>%
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -458,16 +532,16 @@ server <- function (input, output, session) {
     
     if (input$maintabs == 'segTab') {
       dados %>% 
-        select(!!!vars_analiticas)
+        select(!!!vars_lab)
     } else if (input$maintabs == 'priTab') {
       dados %>% 
-        select(vars_localizacao)%>% 
+        select(vars_info)%>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     } else if (input$maintabs == 'download') {
       dados %>% select(vars_download)
     } else {
       dados %>%
-        select(vars_localizacao) %>% 
+        select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -534,10 +608,11 @@ server <- function (input, output, session) {
       #addResetMapButton() %>% 
       #setView(lng = -50.8663589, lat = -12.9214564, zoom = 4) %>%
       addProviderTiles("Esri.WorldStreetMap", group = "Esri.WorldStreetMap") %>% 
-      addProviderTiles("CartoDB.Positron", group = "CartoDB.Positron") %>% 
+      # addProviderTiles("CartoDB.Positron", group = "CartoDB.Positron") %>% 
       addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
       addLayersControl(
-        baseGroups = c("Esri.WorldStreetMap", "CartoDB.Positron", "Esri.WorldImagery"),
+        baseGroups = c("Esri.WorldStreetMap", "Esri.WorldImagery"),
+        # baseGroups = c("Esri.WorldStreetMap", "CartoDB.Positron", "Esri.WorldImagery"),
         options = layersControlOptions(collapsed = TRUE)) %>%
       addMiniMap() 
     
