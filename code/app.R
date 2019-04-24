@@ -1,6 +1,6 @@
 # Title: Repositório Brasileiro Livre para Dados Abertos do Solo - aplicação Shiny
-# Version: 0.2.3
-# Date: 2019-03-09
+# Version: 0.2.4
+# Date: 2019-04-24
 # Authors: Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br),
 #          Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br)
 # License: GPL (>= 2)
@@ -99,7 +99,7 @@ profun_max <-
   max(na.rm = TRUE)
 
 # variavel para acessar avaliação 
-link_avaliacao <- c('https://forms.gle/ZxeeiHF487JR5hm57')
+link_avaliacao <- c('https://forms.gle/4L8WU6HjoLSUZBLc7')
 
 # Inicio -------------------------------------------------
 
@@ -212,7 +212,7 @@ ui <-
                     'Mas nós sabemos que você deve ter ótimas ideias para deixá-la ainda melhor.',
                     br(),
                     'Acesse o formulário que preparamos em',
-                    a(href = 'https://forms.gle/ZxeeiHF487JR5hm57', 'https://forms.gle/ZxeeiHF487JR5hm57'),
+                    a(href = link_avaliacao, glue::glue(link_avaliacao)),
                     ' e deixe a sua opinião.',
                     br(),
                     'São apenas 5 minutinhos!')
