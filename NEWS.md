@@ -1,3 +1,6 @@
+# Versão 0.2.4 (2019-04-24)
+* Atualiza link para formulário de avaliação da ferramenta.
+
 # Versão 0.2.3 (2019-03-09)
 * Remove espaço e linha horizontal superior nas abas.
 * Reformula texto da aba de avaliação pelo usuário.
