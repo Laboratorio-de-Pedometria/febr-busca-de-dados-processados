@@ -1,3 +1,7 @@
+# Versão 0.2.5 (2019-04-25)
+* Links em dataTables arrumados (dataset)
+* filtros atualizados pelo Matheus para novo padrao deixado por Alessandro.
+
 # Versão 0.2.3 (2019-03-09)
 * Remove espaço e linha horizontal superior nas abas.
 * Reformula texto da aba de avaliação pelo usuário.
