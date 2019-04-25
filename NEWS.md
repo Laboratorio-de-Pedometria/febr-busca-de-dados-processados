@@ -1,3 +1,6 @@
+# Versão 0.2.5 (2019-04-25)
+* Corrige criação de links para os conjuntos de dados após filtragem
+
 # Versão 0.2.4 (2019-04-24)
 * Atualiza link para formulário de avaliação da ferramenta.
 

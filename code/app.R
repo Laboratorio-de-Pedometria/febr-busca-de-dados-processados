@@ -1,6 +1,6 @@
 # Title: Repositório Brasileiro Livre para Dados Abertos do Solo - aplicação Shiny
-# Version: 0.2.4
-# Date: 2019-04-24
+# Version: 0.2.5
+# Date: 2019-04-25
 # Authors: Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br),
 #          Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br)
 # License: GPL (>= 2)
@@ -12,7 +12,7 @@ library(shiny)
 library(DT)
 library(RCurl)
 library(dplyr)
-library(lubridate) 
+library(lubridate)
 library(leaflet)
 library(leaflet.extras)
 library(stringr)
@@ -420,46 +420,73 @@ server <- function (input, output, session) {
               is.na(observacao_data)
           )
         )
+      
       if (input$maintabs == 'priTab') {
         my.data %>% 
           select(vars_info) %>% 
-          distinct(dataset_id, observacao_id, .keep_all = TRUE)
+          distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
+          mutate(
+            dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+        
       } else if (input$maintabs == 'segTab') {
         my.data %>% 
           select(!!!vars_lab) %>%
+          mutate(
+            dataset_id = 
+              glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
           group_by(dataset_id, observacao_id) %>% 
-          arrange(profund_sup, .by_group = TRUE)  
+          arrange(profund_sup, .by_group = TRUE)
+        
       } else if (input$maintabs == 'download') {
         my.data %>% 
           select(vars_download)
+        
       } else {
         my.data %>% 
-          select(vars_info) %>%
+          select(vars_info) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
     })
   
   # filtroCid, filtra as cidades que contem dentro do estado selecionado
   filtroCid <- reactive({
-    dados <- dados %>% 
-      filter((dados$municipio_id == input$cid) & (dados$estado_id == input$est) & 
-               ((((dados$profund_sup %in% input$profun[1]:input$profun[2]) & 
-                    (dados$profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
-                  (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))) 
+    my.data <-
+      dados %>%
+      dplyr::filter((dados$municipio_id == input$cid & dados$estado_id == input$est) & 
+                      (
+                        profund_sup %in% input$profun[1]:input$profun[2] &
+                          profund_inf %in% input$profun[1]:input$profun[2] |
+                          is.na(profund_sup) | 
+                          is.na(profund_inf)
+                      ) & (
+                        year(observacao_data) %in% input$data[1]:input$data[2] | 
+                          is.na(observacao_data)
+                      )
+      )
+    
     
     if (input$maintabs == 'priTab') {
-      dados %>% 
+      my.data %>% 
         select(vars_info) %>% 
-        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+        distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
+        mutate(
+          dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+      
     } else if (input$maintabs == 'segTab') {
-      dados %>% 
+      my.data %>% 
         select(!!!vars_lab) %>%
+        mutate(
+          dataset_id = 
+            glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)
+      
     } else if (input$maintabs == 'download') {
-      dados %>% select(vars_download)
+      my.data %>% 
+        select(vars_download)
+      
     } else {
-      dados %>% 
+      my.data %>% 
         select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
@@ -468,25 +495,42 @@ server <- function (input, output, session) {
   # filtroEstTax, filtra a classificacao taxonomica pelo estado, 
   # ultilizado quando o usuario altera somente a taxonomia e o estado
   filtroEstTax <- reactive({
-    dados <- dados %>% filter(input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs  &
-                                (((profund_sup %in% input$profun[1]:input$profun[2]) & 
-                                    (profund_inf %in% input$profun[1]:input$profun[2]) |
-                                    is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
-                                (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
+    my.data <-
+      dados %>%
+      dplyr::filter((input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs) & 
+                      (
+                        profund_sup %in% input$profun[1]:input$profun[2] &
+                          profund_inf %in% input$profun[1]:input$profun[2] |
+                          is.na(profund_sup) | 
+                          is.na(profund_inf)
+                      ) & (
+                        year(observacao_data) %in% input$data[1]:input$data[2] | 
+                          is.na(observacao_data)
+                      )
+      )
     
     if (input$maintabs == 'priTab') {
-      dados %>% 
+      my.data %>% 
         select(vars_info) %>% 
-        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+        distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
+        mutate(
+          dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+      
     } else if (input$maintabs == 'segTab') {
-      dados %>% 
+      my.data %>% 
         select(!!!vars_lab) %>%
+        mutate(
+          dataset_id = 
+            glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
         group_by(dataset_id, observacao_id) %>% 
-        arrange(profund_sup, .by_group = TRUE)  
+        arrange(profund_sup, .by_group = TRUE)
+      
     } else if (input$maintabs == 'download') {
-      dados %>% select(vars_download)
+      my.data %>% 
+        select(vars_download)
+      
     } else {
-      dados %>% 
+      my.data %>% 
         select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
@@ -496,26 +540,43 @@ server <- function (input, output, session) {
   # taxonomia, cidade e estado
   
   filtroEstCidTax <- reactive({
-    dados <- dados %>%    
-      filter(input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs &
-               dados$municipio_id == input$cid &
-               (((profund_sup %in% input$profun[1]:input$profun[2]) & 
-                   (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
-               (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
+    my.data <-
+      dados %>%
+      dplyr::filter((input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs & 
+                       dados$municipio_id == input$cid) & 
+                      (
+                        profund_sup %in% input$profun[1]:input$profun[2] &
+                          profund_inf %in% input$profun[1]:input$profun[2] |
+                          is.na(profund_sup) | 
+                          is.na(profund_inf)
+                      ) & (
+                        year(observacao_data) %in% input$data[1]:input$data[2] | 
+                          is.na(observacao_data)
+                      )
+      )
     
     if (input$maintabs == 'priTab') {
-      dados %>% 
+      my.data %>% 
         select(vars_info) %>% 
-        distinct(dataset_id, observacao_id, .keep_all = TRUE)
+        distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
+        mutate(
+          dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+      
     } else if (input$maintabs == 'segTab') {
-      dados %>% 
+      my.data %>% 
         select(!!!vars_lab) %>%
+        mutate(
+          dataset_id = 
+            glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
         group_by(dataset_id, observacao_id) %>% 
         arrange(profund_sup, .by_group = TRUE)
+      
     } else if (input$maintabs == 'download') {
-      dados %>% select(vars_download)
+      my.data %>% 
+        select(vars_download)
+      
     } else {
-      dados %>%
+      my.data %>% 
         select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
@@ -524,23 +585,42 @@ server <- function (input, output, session) {
   # filtroTax, filtra a classificacao taxonomica, 
   # ultilizado quando o usuario altera somente a taxonomia (input clasTox)
   filtroTax <- reactive({
-    dados <- dados %>%    
-      filter((input$clasTox == dados$taxon_sibcs) &
-               (((profund_sup %in% input$profun[1]:input$profun[2]) & 
-                   (profund_inf %in% input$profun[1]:input$profun[2]) | is.na(dados$profund_sup) | is.na(dados$profund_inf))) &
-               (year(dados$observacao_data) %in% input$data[1]:input$data[2] | is.na(dados$observacao_data)))
-    
-    if (input$maintabs == 'segTab') {
-      dados %>% 
-        select(!!!vars_lab)
-    } else if (input$maintabs == 'priTab') {
-      dados %>% 
-        select(vars_info)%>% 
-        distinct(dataset_id, observacao_id, .keep_all = TRUE)
-    } else if (input$maintabs == 'download') {
-      dados %>% select(vars_download)
-    } else {
+    my.data <-
       dados %>%
+      dplyr::filter((input$clasTox == dados$taxon_sibcs) & 
+                      (
+                        profund_sup %in% input$profun[1]:input$profun[2] &
+                          profund_inf %in% input$profun[1]:input$profun[2] |
+                          is.na(profund_sup) | 
+                          is.na(profund_inf)
+                      ) & (
+                        year(observacao_data) %in% input$data[1]:input$data[2] | 
+                          is.na(observacao_data)
+                      )
+      )
+    
+    if (input$maintabs == 'priTab') {
+      my.data %>% 
+        select(vars_info) %>% 
+        distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
+        mutate(
+          dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+      
+    } else if (input$maintabs == 'segTab') {
+      my.data %>% 
+        select(!!!vars_lab) %>%
+        mutate(
+          dataset_id = 
+            glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
+        group_by(dataset_id, observacao_id) %>% 
+        arrange(profund_sup, .by_group = TRUE)
+      
+    } else if (input$maintabs == 'download') {
+      my.data %>% 
+        select(vars_download)
+      
+    } else {
+      my.data %>% 
         select(vars_info) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
