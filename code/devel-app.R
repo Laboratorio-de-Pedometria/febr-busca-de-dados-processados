@@ -1,6 +1,6 @@
 # Title: Repositório Brasileiro Livre para Dados Abertos do Solo - aplicação Shiny
-# Version: 0.2.5
-# Date: 2019-04-25
+# Version: 0.2.6
+# Date: 2019-05-09
 # Authors: Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br),
 #          Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br)
 # License: GPL (>= 2)
@@ -728,7 +728,7 @@ server <- function (input, output, session) {
   })
   
   
-  # Download ------------------------------------------------------------------------------------------------------------------
+  # Download --------------------------------------------------------------------------------------------------
   
   # Variavel reativa conforme selecao do usuario (ainda nao ultilizada, pois ha apenas uma opcao)
   # fileExt <- reactive({
@@ -736,33 +736,61 @@ server <- function (input, output, session) {
   #           'TXT' = 'txt')
   # })
   
+  # write_json <-
+  #   function (x, file) {
+  #     x %>% 
+  #       # dplyr::group_by(dataset_id) %>% 
+  #       split(f = glue::glue("{.$observacao_id}@{.$dataset_id}")) %>%
+  #       unname() %>%
+  #       lapply(function (y) unname(split(x = y, f = y$camada_nome))) %>% 
+  #       rjson::toJSON(indent = 2) %>% 
+  #       jsonlite::write_json(path = file)
+  #   }
+  write_csv <-
+    function (x, file) {
+      write.table(x = x, file = file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+    }
+  
   output$outDown <- downloadHandler(
     
     # funcao para o nome do arquivo que esta sendo descarregado
     filename = function () {
       # paste('dados-febr-', Sys.Date(), ".", fileExt(), sep = '')
       paste('dados-febr-', Sys.Date(), ".", "txt", sep = '')
+      # paste('dados-febr-', Sys.Date(), ".", "json", sep = '')
     },
     
     # funcao para escreve arquivo que sera descarregado aplicado a filtragem
     content = function (file) {
       if (input$est == 'Todos' & input$clasTox == 'Todos') {
-        write.table(filtroTodos(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        out <- filtroTodos()
+        write_csv(x = out, file = file)
+        # write_json(x = out, file = file)
         
       } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))) {
-        write.table(filtroEst(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        out <- filtroEst()
+        write_csv(x = out, file = file)
+        # write_json(x = out, file = file)
         
       } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))) {
-        write.table(filtroCid(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        out <- filtroCid()
+        write_csv(x = out, file = file)
+        # write_json(x = out, file = file)
         
       } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
-        write.table(filtroEstTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        out <- filtroEstTax()
+        write_csv(x = out, file = file)
+        # write_json(x = out, file = file)
         
       } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))) {
-        write.table(filtroEstCidTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        out <- filtroEstCidTax()
+        write_csv(x = out, file = file)
+        # write_json(x = out, file = file)
         
       } else if (((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
-        write.table(filtroTax(), file, sep = sep_col, dec = sep_dec, row.names = FALSE)
+        out <- filtroTax()
+        write_csv(x = out, file = file)
+        # write_json(x = out, file = file)
       }
     }
   )

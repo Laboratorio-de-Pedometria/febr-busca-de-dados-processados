@@ -1,3 +1,6 @@
+# Versão 0.2.6 (2019-05-09)
+* Primeiros testes com JSON.
+
 # Versão 0.2.5 (2019-04-25)
 * Corrige criação de links para os conjuntos de dados após filtragem
 
