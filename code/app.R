@@ -51,12 +51,12 @@ vars_infoGerais <-
 
 vars_infoGerais_name <- 
   c("Código de identificação do conjunto de dados no repositório",
-    "Título (nome) do conjunto de dados.",
-    "Nome do(a) autor(a) ou responsável pelo do conjunto de dados.",
-    "Nome da organização que gerou ou é responsável pelo conjunto de dados.",
-    "Termos que descrevem aspectos importantes do conjunto de dados.",
-    "Área de especialidade da Agronomia -- Ciência do Solo, segundo tabelas 
-    da CAPES e CNPq, à qual o conjunto de dados está relacionado.",
+    "Título (nome) do conjunto de dados",
+    "Nome do(a) autor(a) ou responsável pelo do conjunto de dados",
+    "Nome da organização que gerou ou é responsável pelo conjunto de dados",
+    "Termos que descrevem aspectos importantes do conjunto de dados",
+    "Área de especialidade da Agronomia - Ciência do Solo, segundo tabelas 
+    da CAPES e CNPq, à qual o conjunto de dados está relacionado",
     " Licença de uso do conjunto de dados.") %>% 
   paste("<code>", vars_infoGerais, "</code>", ": ", ., ". ", sep = "", collapse = " ")
 
@@ -150,9 +150,9 @@ ui <-
             HTML(vars_infoGerais_name)
           ),
           
-          # Aba "Informações Ambientais" ----
+          # Aba "Dados ambientais" ----
           tabPanel(
-            title = tags$h3('Informações ambientais'),
+            title = tags$h3('Dados ambientais'),
             value = 'tabInfoAmb', 
             # tags$br(),
             tags$p(class = 'lead'), 
@@ -220,7 +220,7 @@ ui <-
           ),
           
           tabPanel(
-            title = tags$h3('DEIXE SUA OPINIÃO'), 
+            title = tags$h3('SUA OPINIÃO'), 
             value = 'avaliacao', 
             tags$br(),
             fluidRow(

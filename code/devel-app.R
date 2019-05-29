@@ -47,16 +47,16 @@ dados <-
 #Variavel para apresentacao da tabela "Informacoes gerais"
 vars_infoGerais <-
   c('dataset_id', 'dataset_titulo', 'autor_nome', 'organizacao_nome', #'numero_observacoes',
-     'palavras_chave', 'area_conhecimento', 'dataset_licenca')
+    'palavras_chave', 'area_conhecimento', 'dataset_licenca')
 
 vars_infoGerais_name <- 
   c("Código de identificação do conjunto de dados no repositório",
-    "Título (nome) do conjunto de dados.",
-    "Nome do(a) autor(a) ou responsável pelo do conjunto de dados.",
-    "Nome da organização que gerou ou é responsável pelo conjunto de dados.",
-    "Termos que descrevem aspectos importantes do conjunto de dados.",
-    "Área de especialidade da Agronomia -- Ciência do Solo, segundo tabelas 
-    da CAPES e CNPq, à qual o conjunto de dados está relacionado.",
+    "Título (nome) do conjunto de dados",
+    "Nome do(a) autor(a) ou responsável pelo do conjunto de dados",
+    "Nome da organização que gerou ou é responsável pelo conjunto de dados",
+    "Termos que descrevem aspectos importantes do conjunto de dados",
+    "Área de especialidade da Agronomia - Ciência do Solo, segundo tabelas 
+    da CAPES e CNPq, à qual o conjunto de dados está relacionado",
     " Licença de uso do conjunto de dados.") %>% 
   paste("<code>", vars_infoGerais, "</code>", ": ", ., ". ", sep = "", collapse = " ")
 
@@ -150,9 +150,9 @@ ui <-
             HTML(vars_infoGerais_name)
           ),
           
-          # Aba "Informações Ambientais" ----
+          # Aba "Dados ambientais" ----
           tabPanel(
-            title = tags$h3('Informações ambientais'),
+            title = tags$h3('Dados ambientais'),
             value = 'tabInfoAmb', 
             # tags$br(),
             tags$p(class = 'lead'), 
@@ -220,7 +220,7 @@ ui <-
           ),
           
           tabPanel(
-            title = tags$h3('DEIXE SUA OPINIÃO'), 
+            title = tags$h3('SUA OPINIÃO'), 
             value = 'avaliacao', 
             tags$br(),
             fluidRow(
@@ -272,7 +272,7 @@ server <- function (input, output, session) {
             options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
                            language = list(url = dt_lang))) %>%
           formatCurrency(., c('carbono', 'ctc', 'ph', 'ce', 'dsi'), currency = "", digits = 1, dec.mark = ',')
-          # formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'), currency = "", digits = 1, dec.mark = ',')
+        # formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'), currency = "", digits = 1, dec.mark = ',')
         
       } else if (input$maintabs == 'tabInfoGerais') {
         x %>%
@@ -500,18 +500,18 @@ server <- function (input, output, session) {
   filtroCid <- reactive({
     my.data <-
       dados %>%
-       dplyr::filter((dados$municipio_id == input$cid & dados$estado_id == input$est) & 
-          (
-          profund_sup %in% input$profun[1]:input$profun[2] &
-          profund_inf %in% input$profun[1]:input$profun[2] |
-          is.na(profund_sup) | 
-          is.na(profund_inf)
-      ) & (
-          year(observacao_data) %in% input$data[1]:input$data[2] | 
-          is.na(observacao_data)
-        )
+      dplyr::filter((dados$municipio_id == input$cid & dados$estado_id == input$est) & 
+                      (
+                        profund_sup %in% input$profun[1]:input$profun[2] &
+                          profund_inf %in% input$profun[1]:input$profun[2] |
+                          is.na(profund_sup) | 
+                          is.na(profund_inf)
+                      ) & (
+                        year(observacao_data) %in% input$data[1]:input$data[2] | 
+                          is.na(observacao_data)
+                      )
       )
-        
+    
     if (input$maintabs == 'tabInfoGerais') {
       my.data %>% 
         select(vars_infoGerais) %>% 
@@ -551,16 +551,16 @@ server <- function (input, output, session) {
   filtroEstTax <- reactive({
     my.data <-
       dados %>%
-       dplyr::filter((input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs) & 
-        (
-          profund_sup %in% input$profun[1]:input$profun[2] &
-            profund_inf %in% input$profun[1]:input$profun[2] |
-            is.na(profund_sup) | 
-            is.na(profund_inf)
-        ) & (
-          year(observacao_data) %in% input$data[1]:input$data[2] | 
-            is.na(observacao_data)
-        )
+      dplyr::filter((input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs) & 
+                      (
+                        profund_sup %in% input$profun[1]:input$profun[2] &
+                          profund_inf %in% input$profun[1]:input$profun[2] |
+                          is.na(profund_sup) | 
+                          is.na(profund_inf)
+                      ) & (
+                        year(observacao_data) %in% input$data[1]:input$data[2] | 
+                          is.na(observacao_data)
+                      )
       )
     
     if (input$maintabs == 'tabInfoGerais') {
@@ -603,17 +603,17 @@ server <- function (input, output, session) {
   filtroEstCidTax <- reactive({
     my.data <-
       dados %>%
-       dplyr::filter((input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs & 
-          dados$municipio_id == input$cid) & 
-        (
-          profund_sup %in% input$profun[1]:input$profun[2] &
-            profund_inf %in% input$profun[1]:input$profun[2] |
-            is.na(profund_sup) | 
-            is.na(profund_inf)
-        ) & (
-          year(observacao_data) %in% input$data[1]:input$data[2] | 
-            is.na(observacao_data)
-        )
+      dplyr::filter((input$est == dados$estado_id & input$clasTox == dados$taxon_sibcs & 
+                       dados$municipio_id == input$cid) & 
+                      (
+                        profund_sup %in% input$profun[1]:input$profun[2] &
+                          profund_inf %in% input$profun[1]:input$profun[2] |
+                          is.na(profund_sup) | 
+                          is.na(profund_inf)
+                      ) & (
+                        year(observacao_data) %in% input$data[1]:input$data[2] | 
+                          is.na(observacao_data)
+                      )
       )
     
     if (input$maintabs == 'tabInfoGerais') {
@@ -656,15 +656,15 @@ server <- function (input, output, session) {
     my.data <-
       dados %>%
       dplyr::filter((input$clasTox == dados$taxon_sibcs) & 
-        (
-          profund_sup %in% input$profun[1]:input$profun[2] &
-            profund_inf %in% input$profun[1]:input$profun[2] |
-            is.na(profund_sup) | 
-            is.na(profund_inf)
-        ) & (
-          year(observacao_data) %in% input$data[1]:input$data[2] | 
-            is.na(observacao_data)
-        )
+                      (
+                        profund_sup %in% input$profun[1]:input$profun[2] &
+                          profund_inf %in% input$profun[1]:input$profun[2] |
+                          is.na(profund_sup) | 
+                          is.na(profund_inf)
+                      ) & (
+                        year(observacao_data) %in% input$data[1]:input$data[2] | 
+                          is.na(observacao_data)
+                      )
       )
     
     if (input$maintabs == 'tabInfoGerais') {
