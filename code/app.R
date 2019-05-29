@@ -1,6 +1,6 @@
 # Title: Repositório Brasileiro Livre para Dados Abertos do Solo - aplicação Shiny
-# Version: 0.2.6
-# Date: 2019-05-09
+# Version: 0.2.7
+# Date: 2019-05-28
 # Authors: Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br),
 #          Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br)
 # License: GPL (>= 2)
@@ -44,11 +44,29 @@ dados <-
 
 # Definindo Variaveis ------------------------
 
+#Variavel para apresentacao da tabela "Informacoes gerais"
+vars_infoGerais <-
+  c('dataset_id', 'dataset_titulo', 'autor_nome', 'organizacao_nome', #'numero_observacoes',
+    'palavras_chave', 'area_conhecimento', 'dataset_licenca')
+
+vars_infoGerais_name <- 
+  c("Código de identificação do conjunto de dados no repositório",
+    "Título (nome) do conjunto de dados.",
+    "Nome do(a) autor(a) ou responsável pelo do conjunto de dados.",
+    "Nome da organização que gerou ou é responsável pelo conjunto de dados.",
+    "Termos que descrevem aspectos importantes do conjunto de dados.",
+    "Área de especialidade da Agronomia -- Ciência do Solo, segundo tabelas 
+    da CAPES e CNPq, à qual o conjunto de dados está relacionado.",
+    " Licença de uso do conjunto de dados.") %>% 
+  paste("<code>", vars_infoGerais, "</code>", ": ", ., ". ", sep = "", collapse = " ")
+
+
 # Variavel para apresentacao da tabela localizacao
-vars_info <- 
+vars_amb <- 
   c('dataset_id', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'taxon_sibcs',
     'municipio_id', 'estado_id')
-vars_info_name <- 
+
+vars_amb_name <- 
   c("Código de identificação do conjunto de dados no repositório",
     "Código de identificação da observação do solo no conjunto de dados",
     "Data de observação do solo",
@@ -57,14 +75,14 @@ vars_info_name <-
     "Classificação taxonômica pelo Sistema Brasileiro de Classificação de Solos",
     "Nome do município onde a observação do solo foi realizada",
     "Sigla da unidade federativa onde a observação do solo foi realizada") %>% 
-  paste("<code>", vars_info, "</code>", ": ", ., ". ", sep = "", collapse = " ")
+  paste("<code>", vars_amb, "</code>", ": ", ., ". ", sep = "", collapse = " ")
 
 #variavel para apresentacao da tabela analitica
-# função sym: EXPLICAR ESTRETÉGIA USADA PARA RENOMEAR COLUNAS
-vars_lab <-
+vars_analiticas <-
   c('dataset_id', 'observacao_id', 'profund_sup', 'profund_inf',
     'terrafina', 'argila', 'silte', 'areia', 'carbono', 'ctc', 'ph', 'ce', 'dsi')
-vars_lab_name <- 
+
+vars_analiticas_name <- 
   c("Código de identificação do conjunto de dados no repositório",
     "Código de identificação da observação do solo no conjunto de dados",
     "Profundidade superior da camada (cm)",
@@ -78,13 +96,7 @@ vars_lab_name <-
     "pH em água (adimensional)",
     "Condutividade elétrica (mS/cm)",
     "Densidade do solo inteiro (kg/dm<sup>3</sup>)") %>% 
-  paste("<code>", vars_lab, "</code>", ": ", ., ". ", sep = "", collapse = " ")
-# vars_lab <-
-#   c('dataset_id',
-#     # 'dataset_id' = sym('dataset_id_ap'), 
-#     'observacao_id', 'profund_sup', 'profund_inf',
-#     list('Terra fina' = sym('terrafina'), Argila = sym('argila'), Silte = sym('silte'), Areia = sym('areia'),
-#          Carbono = sym('carbono'), CTC = sym('ctc'), pH = sym('ph'), CE = sym('ce'), DSI = sym('dsi')))
+  paste("<code>", vars_analiticas, "</code>", ": ", ., ". ", sep = "", collapse = " ")
 
 #Variavel para fazer o descarregamento
 vars_download <-
@@ -121,35 +133,47 @@ ui <-
       
       # main / tab-dados
       column(
-        width = 9,
+        width = 10,
         tabsetPanel(
           id = 'maintabs',
           
           # Aba "Informações gerais" ----
           tabPanel(
-            # title = tags$h3('Localização'),
             title = tags$h3('Informações gerais'),
-            value = 'priTab', 
+            value = 'tabInfoGerais', 
             # tags$br(),
             tags$p(class = 'lead'), 
             # tags$hr(), 
-            DT::dataTableOutput("outDados"),
+            DT::dataTableOutput("outInfoGerais"),
             tags$br(),
             tags$hr(), 
-            HTML(vars_info_name)
+            HTML(vars_infoGerais_name)
+          ),
+          
+          # Aba "Informações Ambientais" ----
+          tabPanel(
+            title = tags$h3('Informações ambientais'),
+            value = 'tabInfoAmb', 
+            # tags$br(),
+            tags$p(class = 'lead'), 
+            # tags$hr(), 
+            DT::dataTableOutput("outAmbientais"),
+            tags$br(),
+            tags$hr(), 
+            HTML(vars_amb_name)
           ),
           
           # Aba "Dados analiticos" ----
           tabPanel(
             title = tags$h3('Dados analíticos'),
-            value = 'segTab', 
+            value = 'tabAnaliticos', 
             # tags$br(),
             tags$p(class = 'lead'), 
             # tags$hr(), 
-            DT::dataTableOutput("outDadosSeg"),
+            DT::dataTableOutput("outAnaliticos"),
             tags$br(),
             tags$hr(), 
-            HTML(vars_lab_name)
+            HTML(vars_analiticas_name)
           ),
           
           # Aba "Localização" ----
@@ -196,7 +220,7 @@ ui <-
           ),
           
           tabPanel(
-            title = tags$h3('Deixe sua opinião'), 
+            title = tags$h3('DEIXE SUA OPINIÃO'), 
             value = 'avaliacao', 
             tags$br(),
             fluidRow(
@@ -232,7 +256,7 @@ server <- function (input, output, session) {
   #Função para apresentação das tabelas
   dataTables <-
     function (x) {
-      if (input$maintabs == 'priTab') {
+      if (input$maintabs == 'tabInfoAmb') {
         x %>%
           DT::datatable(
             filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
@@ -240,7 +264,8 @@ server <- function (input, output, session) {
                            language = list(url = dt_lang))) %>%
           # Função para alterar separador decimal
           formatCurrency(., c('coord_x', 'coord_y'), currency = "", digits = 8, dec.mark = ',')
-      } else if (input$maintabs == 'segTab') {
+        
+      } else if (input$maintabs == 'tabAnaliticos') {
         x %>%
           DT::datatable(
             filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
@@ -249,6 +274,12 @@ server <- function (input, output, session) {
           formatCurrency(., c('carbono', 'ctc', 'ph', 'ce', 'dsi'), currency = "", digits = 1, dec.mark = ',')
         # formatCurrency(., c('Carbono', 'CTC', 'pH', 'CE', 'DSI'), currency = "", digits = 1, dec.mark = ',')
         
+      } else if (input$maintabs == 'tabInfoGerais') {
+        x %>%
+          DT::datatable(
+            filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none',
+            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE,
+                           language = list(url = dt_lang)))
       }
     }
   
@@ -343,9 +374,10 @@ server <- function (input, output, session) {
   #   updateRadioButtons(session,'formato', selected = 'TXT')
   # })
   
+  
   # filtragem -------------------------------------------------------------------
   
-  # filtroTodos, ,ultilizado quando o usuario nao altera os estado, cidade e taxonomia
+  # filtroTodos, ultilizado quando o usuario nao altera os estado, cidade e taxonomia
   filtroTodos <- 
     reactive({
       # Esse filter é usado em todos filtros, ele diz se a profundade esta entre o input profun
@@ -366,18 +398,27 @@ server <- function (input, output, session) {
         )
       
       #Condicoes para apresentacao das abas
-      if (input$maintabs == 'priTab') {
-        # Para a tabela localizacao, remove-se as observacoes repetidas 
+      if (input$maintabs == 'tabInfoGerais') {
+        # Para a tabela informacoes gerais, deixa-se somente um dataset_id, sem repeticao
         my.data %>% 
-          select(vars_info) %>% 
+          select(vars_infoGerais) %>% 
+          distinct(dataset_id, .keep_all = TRUE) %>% 
+          #Funcao para colocar link no dataset_id
+          mutate(
+            dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+        
+      } else if (input$maintabs == 'tabInfoAmb') {
+        # Para a tabela informacoes ambientais, remove-se as observacoes repetidas 
+        my.data %>% 
+          select(vars_amb) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
           mutate(
             dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
         
-      } else if (input$maintabs == 'segTab') {
+      } else if (input$maintabs == 'tabAnaliticos') {
         # Para a tabela analitica, apresenta em condicao de ordem crescente da profundidade 
         my.data %>% 
-          select(!!!vars_lab) %>%
+          select(!!!vars_analiticas) %>%
           mutate(
             dataset_id = 
               glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
@@ -395,7 +436,7 @@ server <- function (input, output, session) {
         # corretamente
         # removendo tambem, as observacoes repetidas
         my.data %>% 
-          select(vars_info) %>% 
+          select(vars_amb) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
     })
@@ -421,16 +462,23 @@ server <- function (input, output, session) {
           )
         )
       
-      if (input$maintabs == 'priTab') {
+      if (input$maintabs == 'tabInfoGerais') {
         my.data %>% 
-          select(vars_info) %>% 
+          select(vars_infoGerais) %>% 
+          distinct(dataset_id, .keep_all = TRUE) %>%
+          mutate(
+            dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+        
+      } else if (input$maintabs == 'tabInfoAmb') {
+        my.data %>% 
+          select(vars_amb) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
           mutate(
             dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
         
-      } else if (input$maintabs == 'segTab') {
+      } else if (input$maintabs == 'tabAnaliticos') {
         my.data %>% 
-          select(!!!vars_lab) %>%
+          select(!!!vars_analiticas) %>%
           mutate(
             dataset_id = 
               glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
@@ -443,7 +491,7 @@ server <- function (input, output, session) {
         
       } else {
         my.data %>% 
-          select(vars_info) %>% 
+          select(vars_amb) %>% 
           distinct(dataset_id, observacao_id, .keep_all = TRUE)
       }
     })
@@ -464,17 +512,23 @@ server <- function (input, output, session) {
                       )
       )
     
-    
-    if (input$maintabs == 'priTab') {
+    if (input$maintabs == 'tabInfoGerais') {
       my.data %>% 
-        select(vars_info) %>% 
+        select(vars_infoGerais) %>% 
+        distinct(dataset_id, .keep_all = TRUE) %>%
+        mutate(
+          dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+      
+    } else if (input$maintabs == 'tabInfoAmb') {
+      my.data %>% 
+        select(vars_amb) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
         mutate(
           dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
       
-    } else if (input$maintabs == 'segTab') {
+    } else if (input$maintabs == 'tabAnaliticos') {
       my.data %>% 
-        select(!!!vars_lab) %>%
+        select(!!!vars_analiticas) %>%
         mutate(
           dataset_id = 
             glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
@@ -487,7 +541,7 @@ server <- function (input, output, session) {
       
     } else {
       my.data %>% 
-        select(vars_info) %>% 
+        select(vars_amb) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -509,16 +563,23 @@ server <- function (input, output, session) {
                       )
       )
     
-    if (input$maintabs == 'priTab') {
+    if (input$maintabs == 'tabInfoGerais') {
       my.data %>% 
-        select(vars_info) %>% 
+        select(vars_infoGerais) %>% 
+        distinct(dataset_id, .keep_all = TRUE) %>%
+        mutate(
+          dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+      
+    } else if (input$maintabs == 'tabInfoAmb') {
+      my.data %>% 
+        select(vars_amb) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
         mutate(
           dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
       
-    } else if (input$maintabs == 'segTab') {
+    } else if (input$maintabs == 'tabAnaliticos') {
       my.data %>% 
-        select(!!!vars_lab) %>%
+        select(!!!vars_analiticas) %>%
         mutate(
           dataset_id = 
             glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
@@ -531,7 +592,7 @@ server <- function (input, output, session) {
       
     } else {
       my.data %>% 
-        select(vars_info) %>% 
+        select(vars_amb) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -555,16 +616,23 @@ server <- function (input, output, session) {
                       )
       )
     
-    if (input$maintabs == 'priTab') {
+    if (input$maintabs == 'tabInfoGerais') {
       my.data %>% 
-        select(vars_info) %>% 
+        select(vars_infoGerais) %>% 
+        distinct(dataset_id, .keep_all = TRUE) %>%
+        mutate(
+          dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+      
+    } else if (input$maintabs == 'tabInfoAmb') {
+      my.data %>% 
+        select(vars_amb) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
         mutate(
           dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
       
-    } else if (input$maintabs == 'segTab') {
+    } else if (input$maintabs == 'tabAnaliticos') {
       my.data %>% 
-        select(!!!vars_lab) %>%
+        select(!!!vars_analiticas) %>%
         mutate(
           dataset_id = 
             glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
@@ -577,7 +645,7 @@ server <- function (input, output, session) {
       
     } else {
       my.data %>% 
-        select(vars_info) %>% 
+        select(vars_amb) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
@@ -599,16 +667,23 @@ server <- function (input, output, session) {
                       )
       )
     
-    if (input$maintabs == 'priTab') {
+    if (input$maintabs == 'tabInfoGerais') {
       my.data %>% 
-        select(vars_info) %>% 
+        select(vars_infoGerais) %>% 
+        distinct(dataset_id, .keep_all = TRUE) %>%
+        mutate(
+          dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
+      
+    } else if (input$maintabs == 'tabInfoAmb') {
+      my.data %>% 
+        select(vars_amb) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE) %>% 
         mutate(
           dataset_id = glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>"))
       
-    } else if (input$maintabs == 'segTab') {
+    } else if (input$maintabs == 'tabAnaliticos') {
       my.data %>% 
-        select(!!!vars_lab) %>%
+        select(!!!vars_analiticas) %>%
         mutate(
           dataset_id = 
             glue::glue("<a href={febr_catalog}{dataset_id} target='_blank'>{dataset_id}</a>")) %>% 
@@ -621,15 +696,39 @@ server <- function (input, output, session) {
       
     } else {
       my.data %>% 
-        select(vars_info) %>% 
+        select(vars_amb) %>% 
         distinct(dataset_id, observacao_id, .keep_all = TRUE)
     }
   })
   
-  # Tabela de localização ---------------------------------------------------------------------------------------------
+  # Tabela de Informacoes Gerais --------------------------------------------------------------
+  
+  output$outInfoGerais <- DT::renderDataTable({
+    if (input$est == 'Todos' && input$clasTox == 'Todos') {
+      filtroTodos() %>% 
+        dataTables()
+    } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid == 'Todos'))) {
+      filtroEst() %>% 
+        dataTables()
+    } else if (((input$est != 'Todos') && (input$clasTox == 'Todos') && (input$cid != 'Todos'))) {
+      filtroCid() %>% 
+        dataTables()
+    } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
+      filtroEstTax() %>% 
+        dataTables()
+    } else if (((input$est != 'Todos') && (input$clasTox != 'Todos') && (input$cid != 'Todos'))) {
+      filtroEstCidTax() %>% 
+        dataTables()
+    } else if (((input$est == 'Todos') && (input$clasTox != 'Todos') && (input$cid == 'Todos'))) {
+      filtroTax() %>% 
+        dataTables()
+    }
+  })
+  
+  # Tabela de Informacoes ambientais --------------------------------------------------------------
   
   # Apresentacao da tabela localizacao conforme for filtrado. 
-  output$outDados <- 
+  output$outAmbientais <- 
     DT::renderDataTable({
       if (input$est == 'Todos' && input$clasTox == 'Todos') {
         filtroTodos() %>% 
@@ -655,7 +754,7 @@ server <- function (input, output, session) {
   # Tabela Analitica --------------------------------------------------------------------------------------------
   
   # Apresentacao da tabela analitica conforme for filtrado. 
-  output$outDadosSeg <- DT::renderDataTable({
+  output$outAnaliticos <- DT::renderDataTable({
     if (input$est == 'Todos' && input$clasTox == 'Todos') {
       filtroTodos() %>% 
         dataTables()
