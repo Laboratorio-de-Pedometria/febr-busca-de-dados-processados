@@ -57,7 +57,7 @@ vars_infoGerais_name <-
     "Termos que descrevem aspectos importantes do conjunto de dados",
     "Área de especialidade da Agronomia - Ciência do Solo, segundo tabelas 
     da CAPES e CNPq, à qual o conjunto de dados está relacionado",
-    " Licença de uso do conjunto de dados.") %>% 
+    "Licença de uso do conjunto de dados") %>% 
   paste("<code>", vars_infoGerais, "</code>", ": ", ., ". ", sep = "", collapse = " ")
 
 
