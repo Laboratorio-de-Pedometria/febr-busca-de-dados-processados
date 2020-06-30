@@ -1,0 +1,13 @@
+name: febr
+title: febr: Busca e visualização de dados
+username:
+account: pedometria
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 888212
+bundleId: 2039560
+url: https://pedometria.shinyapps.io/febr/
+when: 1556226288.31517
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: devel-app.R
