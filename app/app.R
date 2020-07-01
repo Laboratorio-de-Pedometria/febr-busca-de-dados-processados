@@ -25,9 +25,9 @@ febr_catalog <- "http://coral.ufsm.br/febr/catalog/"
 # Definição de língua a ser utilizada nas tabelas geradas usando DT::datatable
 dt_lang <- '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'
 
-# Descarregamento dos dados -----------------------------------------------------------------------------------
-# dados <- getURL("https://cloud.utfpr.edu.br/index.php/s/nEXaoXIE0nZ1AqG/download")
-# dados <- getURL("https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.txt")
+# Descarregamento dos dados ####
+# Dados são descarregados do servidor ownCloud da UTFPR
+# Usar arquivo ZIP acelera o descarregamento dos dados e a inicialização da página
 # dados <- "https://cloud.utfpr.edu.br/index.php/s/nEXaoXIE0nZ1AqG/download"
 # dados <- "https://raw.githubusercontent.com/febr-team/febr-data/master/data/febr-superconjunto.txt"
 # dados <- "data/febr-superconjunto.zip"
@@ -297,7 +297,7 @@ server <-
         } else if (input$maintabs == 'download') {
           # Para a aba de download, seleciona a variavel que contem as informacoes para download definida no 
           # comeco do codigo
-          select(my.data, vars_download)
+          select(my.data, all_of(vars_download))
           
         } else {
           # Para a aba do mapa, Apresenta as variaveis para plotagem no mapa, apresentar o label e o popup 
@@ -343,7 +343,7 @@ server <-
             arrange(profund_sup, .by_group = TRUE)
           
         } else if (input$maintabs == 'download') {
-          select(my.data, vars_download)
+          select(my.data, all_of(vars_download))
           
         } else {
           select(my.data, all_of(vars_info)) %>% distinct(dataset_id, observacao_id, .keep_all = TRUE)
@@ -380,7 +380,7 @@ server <-
           group_by(dataset_id, observacao_id) %>% arrange(profund_sup, .by_group = TRUE)
         
       } else if (input$maintabs == 'download') {
-        select(my.data, vars_download)
+        select(my.data, all_of(vars_download))
         
       } else {
         select(my.data, all_of(vars_info)) %>% distinct(dataset_id, observacao_id, .keep_all = TRUE)
@@ -417,7 +417,7 @@ server <-
           group_by(dataset_id, observacao_id) %>% arrange(profund_sup, .by_group = TRUE)
         
       } else if (input$maintabs == 'download') {
-        select(my.data, vars_download)
+        select(my.data, all_of(vars_download))
         
       } else {
         select(my.data, all_of(vars_info)) %>% distinct(dataset_id, observacao_id, .keep_all = TRUE)
@@ -456,7 +456,7 @@ server <-
           group_by(dataset_id, observacao_id) %>% arrange(profund_sup, .by_group = TRUE)
         
       } else if (input$maintabs == 'download') {
-        select(my.data, vars_download)
+        select(my.data, all_of(vars_download))
         
       } else {
         select(my.data, all_of(vars_info)) %>% distinct(dataset_id, observacao_id, .keep_all = TRUE)
@@ -493,7 +493,7 @@ server <-
           group_by(dataset_id, observacao_id) %>% arrange(profund_sup, .by_group = TRUE)
         
       } else if (input$maintabs == 'download') {
-        select(my.data, vars_download)
+        select(my.data, all_of(vars_download))
         
       } else {
         select(my.data, all_of(vars_info)) %>% distinct(dataset_id, observacao_id, .keep_all = TRUE)
