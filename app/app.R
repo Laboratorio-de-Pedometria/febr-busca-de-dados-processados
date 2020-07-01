@@ -174,15 +174,29 @@ server <-
       function (x) {
         if (input$maintabs == 'priTab') {
           DT::datatable(
-            data = x, filter = 'none', escape = FALSE, rownames = FALSE, selection = 'none',
-            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 15, rownames = FALSE, 
-                           language = list(url = dt_lang))) %>%
+            data = x, 
+            filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none', extensions = 'Buttons',
+            options = list(
+              lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE, language = list(url = dt_lang), 
+              dom = 'Bfrtip',
+              buttons = list(
+                list(extend = 'copy', buttons = 'copy', text = 'Copiar'),
+                list(extend = 'csv', buttons = 'csv', text = 'CSV'),
+                list(extend = 'print', buttons = 'print', text = 'Imprimir')
+              ))) %>%
             DT::formatCurrency(., c('coord_x', 'coord_y'), currency = "", digits = 6, dec.mark = ',')
         } else if (input$maintabs == 'segTab') {
           DT::datatable(
-            data = x, filter = 'none', escape = FALSE, rownames = FALSE, selection = 'none',
-            options = list(lengthMenu = c(5, 10, 30, 50), pageLength = 15, rownames = FALSE,
-                           language = list(url = dt_lang))) %>%
+            data = x, 
+            filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none', extensions = 'Buttons',
+            options = list(
+              lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE, language = list(url = dt_lang),
+              dom = 'Bfrtip',
+              buttons = list(
+                list(extend = 'copy', buttons = 'copy', text = 'Copiar'),
+                list(extend = 'csv', buttons = 'csv', text = 'CSV'),
+                list(extend = 'print', buttons = 'print', text = 'Imprimir')
+              ))) %>%
             DT::formatCurrency(., c('carbono', 'ctc', 'ph', 'ce', 'dsi'), currency = "", digits = 1, 
                                dec.mark = ',')
         }
