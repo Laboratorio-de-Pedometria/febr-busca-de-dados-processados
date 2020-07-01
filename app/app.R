@@ -38,7 +38,7 @@ dados <- read.table(unzip(temp), sep = ";", dec = ",", stringsAsFactors = FALSE,
 
 # Definindo variáveis -----------------------------------------------------------------------------------------
 
-# Variáveis para apresentação da tabela 'Informações Gerais'
+# Variáveis para apresentação da tabela 'Dados Gerais'
 vars_info <- 
   c('dataset_id', 'observacao_id', 'observacao_data', 'coord_x', 'coord_y', 'taxon_sibcs', 'municipio_id',
     'estado_id')
@@ -124,9 +124,9 @@ ui <-
                   'São apenas 5 minutinhos!'
                 )))),
           
-          # Aba "Informações Gerais"
+          # Aba "Dados Gerais"
           tabPanel(
-            title = tags$h3('Informações Gerais'), value = 'priTab', tags$p(class = 'lead'), 
+            title = tags$h3('Dados Gerais'), value = 'priTab', tags$p(class = 'lead'), 
             DT::dataTableOutput("outDados"), tags$br(), tags$hr(), HTML(vars_info_name)
           ),
           
