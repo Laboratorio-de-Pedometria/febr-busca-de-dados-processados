@@ -93,9 +93,12 @@ ui <-
       column(
         width = 3,
         wellPanel(
-          selectInput(inputId = "est", label = "UF", choices = NULL),
-          selectInput(inputId = "cid", label = "Município", choices =  NULL),
-          selectInput(inputId = "clasTox", label = "Taxonomia", choices = NULL), 
+          tags$style(".well{padding:10px;}"),
+          h3('FEBR | Dados Padronizados'),
+          tags$hr(),
+          selectInput(inputId = "est", label = "UF", choices = NULL, multiple = FALSE),
+          selectInput(inputId = "cid", label = "Município", choices =  NULL, multiple = FALSE),
+          selectInput(inputId = "clasTox", label = "Taxonomia", choices = NULL, multiple = FALSE),
           sliderInput(inputId = "data", label = "Ano", min = 1900, max = 2019, value = c(1900, 2019), sep = ''),
           sliderInput(inputId = "profun", label = "Profundidade (cm)", sep = '', min = 0, max = profun_max,
                       value = c(0, profun_max)))
@@ -113,9 +116,11 @@ ui <-
             fluidRow(
               column(
                 width = 12, 
-                h2('Olá, tudo bem?'),
                 htmltools::HTML(
-                  '<img src = "logo.png">'
+                  '
+                    <img src = "logo.png" alt = "logo.png" width = 300>
+                    
+                  '
                 ),
                 p(
                   'Esperamos que você tenha gostado da nova ferramenta de busca e visualização de dados.', 
