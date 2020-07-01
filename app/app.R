@@ -136,9 +136,9 @@ ui <-
             DT::dataTableOutput("outDadosSeg"), tags$br(), tags$hr(), HTML(vars_lab_name)
           ),
           
-          # Aba "Localização"
+          # Aba "Mapa"
           tabPanel(
-            title = tags$h3('Localização'), value = 'map',
+            title = tags$h3('Mapa'), value = 'map',
             fluidRow(
               column(
                 width = 12, tags$br(), leafletOutput('outMapa', width = '100%', height = '800'),
