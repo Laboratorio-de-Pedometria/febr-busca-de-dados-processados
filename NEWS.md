@@ -1,3 +1,14 @@
+# Versão 0.2.7 (2019-05-28)
+* Mudança de nomes das variáveis de apresentação das tabelas.
+* Mudança de nomes das abas.
+* Adição de uma nova aba.
+* Aumento do espaço das tabelas.
+* Adicionado uma tabela na nova aba.
+* Adicionado um novo if nos filtros.
+
+# Versão 0.2.6 (2019-05-09)
+* Primeiros testes com JSON.
+
 # Versão 0.2.5 (2019-04-25)
 
 * Corrige criação de links para os conjuntos de dados após filtragem
