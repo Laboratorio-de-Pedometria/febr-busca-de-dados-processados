@@ -175,10 +175,13 @@ server <-
         if (input$maintabs == 'priTab') {
           DT::datatable(
             data = x, 
-            filter = 'top', escape = FALSE, rownames = FALSE, selection = 'none', extensions = 'Buttons',
+            filter = 'top', escape = FALSE, rownames = FALSE, 
+            # selection = 'none',
+            extensions = 'Buttons',
             options = list(
               lengthMenu = c(5, 10, 30, 50), pageLength = 5, rownames = FALSE, language = list(url = dt_lang), 
               dom = 'Bfrtip',
+              search = list(regex = TRUE, caseInsensitive = FALSE),
               buttons = list(
                 list(extend = 'copy', buttons = 'copy', text = 'Copiar'),
                 list(extend = 'csv', buttons = 'csv', text = 'CSV'),
