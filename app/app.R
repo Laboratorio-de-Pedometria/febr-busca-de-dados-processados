@@ -32,14 +32,19 @@ ui <- fluidPage(
     column(
       width = 2,
       wellPanel(
-        htmltools::HTML('<h3>FEBR</h3><h4>Dados Processados</h4>'), tags$hr(),
+        htmltools::HTML('<h3>FEBR</h3><h4>Dados Processados</h4>'), 
+        
+        tags$hr(),
         
         # Selecionar variáveis
         tags$h4('Tabela'),
         varSelectInput(
-          inputId = 'variables', label = 'Variáveis selecionadas', 
-          data = superconjunto, multiple = TRUE,
-          selected = c('dataset_id')),
+          inputId = 'variables', 
+          label = 'Variáveis selecionadas', 
+          data = superconjunto, 
+          multiple = TRUE, 
+          selected = c('dataset_id', 'observacao_id', 'camada_id')
+        ),
         
         tags$hr(),
         
@@ -124,7 +129,10 @@ server <- function (input, output) {
       dplyr::select(superconjunto, !!!input$variables),
       filter = 'top', 
       escape = FALSE, 
-      rownames = FALSE, 
+      # rownames = FALSE, 
+      rownames = paste0(
+        '<a href="https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso?path=%2F', superconjunto$dataset_id, 
+        '" target=_blank title = "Acessar conjunto de dados brutos">', superconjunto$dataset_id, '</a>'),
       # extensions = 'Buttons',
       options = list(
         language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'), 
@@ -146,7 +154,8 @@ server <- function (input, output) {
     unique <- !duplicated(superconjunto[filtered, c("dataset_id", "observacao_id")])
     output$outMapa <-
       renderLeaflet(
-        m <- leaflet() %>% 
+        m <- 
+          leaflet() %>% 
           addProviderTiles("Esri.WorldStreetMap", group = "Esri.WorldStreetMap") %>% 
           addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
           addLayersControl(
