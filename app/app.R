@@ -16,6 +16,12 @@ url <- "http://cloud.utfpr.edu.br/index.php/s/QpG6Tcr6x1NBOcI/download"
 temp <- tempfile(fileext = '.zip')
 download.file(url = url, destfile = temp)
 superconjunto <- read.table(unzip(temp), sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
+superconjunto$observacao_data <- as.Date(superconjunto$observacao_data, format = "%Y-%m-%d")
+superconjunto[, c("coord_precisao", "terrafina", "argila", "silte", "areia")] <- 
+  lapply(superconjunto[, c("coord_precisao", "terrafina", "argila", "silte", "areia")], as.numeric)
+
+# Documentação da aplicação
+ajuda <- readLines('www/ajuda.html')
 
 # Definir UI para aplicação
 ui <- fluidPage(
@@ -114,7 +120,7 @@ ui <- fluidPage(
         
         tabPanel(
           title = tags$h3('Ajuda'),
-          )
+          HTML(ajuda)
         )
       )
     )
@@ -135,11 +141,14 @@ server <- function (input, output) {
         '<a href="https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso?path=%2F', superconjunto$dataset_id, 
         '" target=_blank title = "Acessar conjunto de dados brutos">', superconjunto$dataset_id, '</a>'),
       # extensions = 'Buttons',
+      # Plug-in accent-neutralise.js ainda não foi implementado
+      # https://github.com/rstudio/DT/issues/822
+      # plugins = 'accent-neutralise', 
       options = list(
         language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'), 
         pageLength = 5, 
         # dom = 'B<"clear">lfrtip', 
-        search = list(regex = TRUE, caseInsensitive = FALSE)#,
+        search = list(regex = TRUE, caseInsensitive = TRUE)#,
         # buttons = list(
           # list(extend = 'copy', buttons = 'copy', text = 'Copiar'),
           # list(extend = 'csv', buttons = 'csv', text = 'CSV'),
