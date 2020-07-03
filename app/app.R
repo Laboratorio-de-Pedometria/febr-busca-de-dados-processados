@@ -11,13 +11,13 @@ library(shiny)
 library(leaflet)
 library(magrittr)
 
-# Descarregar dados
+# Descarregar super conjunto de dados
 url <- "http://cloud.utfpr.edu.br/index.php/s/QpG6Tcr6x1NBOcI/download"
 temp <- tempfile(fileext = '.zip')
 download.file(url = url, destfile = temp)
 superconjunto <- read.table(unzip(temp), sep = ";", dec = ",", stringsAsFactors = FALSE, header = TRUE)
 
-# Define UI for application that draws a histogram
+# Definir UI para aplicação
 ui <- fluidPage(
   
   tags$head(
@@ -25,7 +25,7 @@ ui <- fluidPage(
     tags$style(".well{padding:10px;}")
   ),
    
-  # Application title
+  # Título da aplicação
   titlePanel(title = a(href = 'https://www.pedometria.org/projeto/febr/'), windowTitle = 'FEBR'),
   
   fluidRow(
@@ -60,7 +60,7 @@ ui <- fluidPage(
       tabsetPanel(
         id = 'maintabs',
         
-        # Dados
+        # Tabela
         tabPanel(
           title = tags$h3('Tabela'),
           DT::dataTableOutput("outDados")
@@ -82,9 +82,9 @@ ui <- fluidPage(
             wellPanel(
               style = 'text-align:center',
               downloadButton(
-                outputId = "outFiltered", 
-                label = HTML('Dados filtrados<br><br><pre>(ext: ".txt", sep: "\\t", dec: ",")</pre>'),
-                class = 'btn')
+                outputId = "outFiltered",
+                class = 'btn',
+                label = HTML('Dados filtrados<br><br><pre>(ext: ".txt", sep: "\\t", dec: ",")</pre>'))
             ),
             
             # Conjunto(s) de dados filtrado(s)
@@ -92,18 +92,17 @@ ui <- fluidPage(
               style = 'text-align:center',
               downloadButton(
                 outputId = "outFilteredAll", 
-                label = HTML('Conjunto(s) de dados filtrado(s)<br><br>',
-                             '<pre>(ext: ".txt", sep: "\\t", dec: ",")</pre>'),
-                class = 'btn')
+                class = 'btn',
+                label = HTML('Conjunto(s) de dados filtrado(s)<br><br><pre>(ext: ".txt", sep: "\\t", dec: ",")</pre>'))
             ),
             
             # Conjunto(s) de dados bruto(s)
             wellPanel(
               style = 'text-align:center',
               downloadButton(
-                outputId = "outRawAll", 
-                label = HTML('Conjunto(s) de dados bruto(s)<br><br>',
-                             '<pre>(ext: ".zip")</pre>'), class = 'btn')
+                outputId = "outRawAll",
+                class = 'btn',
+                label = HTML('Conjunto(s) de dados bruto(s)<br><br><pre>(ext: ".zip")</pre>'))
             )
           )
         )#,
@@ -116,24 +115,29 @@ ui <- fluidPage(
   )
 )
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
+# server ####
+server <- function (input, output) {
   
   # Tabela de dados
   output$outDados <-
     DT::renderDT(
       dplyr::select(superconjunto, !!!input$variables),
-      filter = 'top', escape = FALSE, rownames = FALSE, extensions = 'Buttons',
+      filter = 'top', 
+      escape = FALSE, 
+      rownames = FALSE, 
+      # extensions = 'Buttons',
       options = list(
-        pageLength = 5,
         language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'), 
-        dom = 'B<"clear">lfrtip',
-        search = list(regex = TRUE, caseInsensitive = FALSE),
-        buttons = list(
-          list(extend = 'copy', buttons = 'copy', text = 'Copiar'),
-          list(extend = 'csv', buttons = 'csv', text = 'CSV'),
-          list(extend = 'print', buttons = 'print', text = 'Imprimir')
-        )))
+        pageLength = 5, 
+        # dom = 'B<"clear">lfrtip', 
+        search = list(regex = TRUE, caseInsensitive = FALSE)#,
+        # buttons = list(
+          # list(extend = 'copy', buttons = 'copy', text = 'Copiar'),
+          # list(extend = 'csv', buttons = 'csv', text = 'CSV'),
+          # list(extend = 'print', buttons = 'print', text = 'Imprimir')
+        # )
+      )
+    )
   
   # Mapa
   # https://yihui.shinyapps.io/DT-info/
