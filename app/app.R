@@ -56,7 +56,16 @@ ui <- fluidPage(
         
         # Opções do mapa
         tags$h4('Mapa'),
-        sliderInput(inputId = 'radius', label = 'Raio de agrupamento', value = 80, min = 0, max = 100)
+        sliderInput(inputId = 'radius', label = 'Raio de agrupamento', value = 80, min = 0, max = 100)#,
+        # https://www.paulamoraga.com/book-geospatial/sec-shinyexample.html
+        # fileInput(
+        #   inputId = 'vector', 
+        #   label = 'Área de interesse',
+        #   accept = c('.shp', '.dbf', '.sbn', '.sbx', '.shx', '.prj'), 
+        #   multiple = TRUE, 
+        #   placeholder = "Nenhum arquivo selecionado",
+        #   buttonLabel = "Navegar..."
+        # )
       ),
       HTML(paste('©', format(Sys.time(), "%Y"), 'A. Samuel-Rosa<br>')),
       HTML(paste('This work is licensed under', 
@@ -87,7 +96,7 @@ ui <- fluidPage(
         tabPanel(
           title = tags$h3('Descarregar'),
           column(
-            width = 6, offset = 3,
+            width = 3, offset = 3, tags$br(),
             
             # Dados filtrados
             wellPanel(
@@ -95,7 +104,7 @@ ui <- fluidPage(
               downloadButton(
                 outputId = "outFiltered",
                 class = 'btn',
-                label = HTML('Dados filtrados<br><br><pre>(ext: ".txt", sep: "\\t", dec: ",")</pre>'))
+                label = HTML('Dados filtrados<br>(*.txt)'))
             ),
             
             # Conjunto(s) de dados filtrado(s)
@@ -104,16 +113,26 @@ ui <- fluidPage(
               downloadButton(
                 outputId = "outFilteredAll", 
                 class = 'btn',
-                label = HTML('Conjunto(s) de dados filtrado(s)<br><br><pre>(ext: ".txt", sep: "\\t", dec: ",")</pre>'))
+                label = HTML('Conjunto(s) de dados filtrado(s)<br>(*.txt)'))
             ),
             
-            # Conjunto(s) de dados bruto(s)
+            # Conjunto(s) de dados original(is)
             wellPanel(
               style = 'text-align:center',
               downloadButton(
                 outputId = "outRawAll",
                 class = 'btn',
-                label = HTML('Conjunto(s) de dados bruto(s)<br><br><pre>(ext: ".zip")</pre>'))
+                label = HTML('Conjunto(s) de dados original(is)<br>(*.zip)'))
+            ),
+
+            # Todos os dados
+            wellPanel(
+              style = 'text-align:center',
+              downloadButton(
+                outputId = "outAll",
+                class = 'btn',
+                label = HTML('Todos os dados do repositório<br>(*.zip)')
+              )
             )
           )
         ),
@@ -139,7 +158,7 @@ server <- function (input, output) {
       # rownames = FALSE, 
       rownames = paste0(
         '<a href="https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso?path=%2F', superconjunto$dataset_id, 
-        '" target=_blank title = "Acessar conjunto de dados brutos">', superconjunto$dataset_id, '</a>'),
+        '" target=_blank title = "Acessar conjunto de dados original">', superconjunto$dataset_id, '</a>'),
       # extensions = 'Buttons',
       # Plug-in accent-neutralise.js ainda não foi implementado
       # https://github.com/rstudio/DT/issues/822
@@ -162,41 +181,39 @@ server <- function (input, output) {
   observe({
     filtered <- input$outDados_rows_all
     unique <- !duplicated(superconjunto[filtered, c("dataset_id", "observacao_id")])
-    output$outMapa <-
-      renderLeaflet(
-        m <- 
-          leaflet() %>% 
-          addProviderTiles("Esri.WorldStreetMap", group = "Esri.WorldStreetMap") %>% 
-          addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
-          addLayersControl(
-            baseGroups = c("Esri.WorldStreetMap", "Esri.WorldImagery"),
-            options = layersControlOptions(collapsed = TRUE)) %>%
-          addMiniMap() %>% 
-          addAwesomeMarkers(
-            lng = superconjunto[filtered, ][unique, 'coord_x'],
-            lat = superconjunto[filtered, ][unique, 'coord_y'], 
-            icon = awesomeIcons(
-              icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
-            label = paste(superconjunto[filtered, ][unique, 'observacao_id'], '@',
-                          superconjunto[filtered, ][unique, 'dataset_id'], sep = ''),
-            popup = 
-              paste0('<b>', superconjunto[filtered, ][unique, 'dataset_id'], '</b><br>',
-                     superconjunto[filtered, ][unique, 'dataset_titulo'], '<br>',
-                     '<i>', superconjunto[filtered, ][unique, 'dataset_licenca'], '</i><br>',
-                     '<a href = "https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso?path=%2F', 
-                     superconjunto[filtered, ][unique, 'dataset_id'], '" target=_blank>',
-                     'Acessar conjunto de dados brutos</a><br>',
-                     '<a href = "https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso/download?path=%2F',
-                     superconjunto[filtered, ][unique, 'dataset_id'], '/',
-                     superconjunto[filtered, ][unique, 'dataset_id'], '.xlsx" target=_blank>',
-                     'Descarregar conjunto de dados brutos (.xlsx)</a>'),
-            clusterOptions = markerClusterOptions(maxClusterRadius = input$radius)) %>% 
-          leafem::addHomeButton(
-            ext = raster::extent(
-              sf::st_as_sf(superconjunto[filtered, ][unique, c('coord_x', 'coord_y')], 
-                           coords = c('coord_x', 'coord_y'), na.fail = FALSE)),
-            position = "bottomleft", group = 'Ver tudo')
-      )
+    m <- 
+      leaflet() %>% 
+      addProviderTiles("Esri.WorldStreetMap", group = "Esri.WorldStreetMap") %>% 
+      addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
+      addLayersControl(
+        baseGroups = c("Esri.WorldStreetMap", "Esri.WorldImagery"),
+        options = layersControlOptions(collapsed = TRUE)) %>%
+      addMiniMap() %>% 
+      addAwesomeMarkers(
+        lng = superconjunto[filtered, ][unique, 'coord_x'],
+        lat = superconjunto[filtered, ][unique, 'coord_y'], 
+        icon = awesomeIcons(
+          icon = "info-sign", markerColor = "#b22222", iconColor = "#fffff0"),
+        label = paste(superconjunto[filtered, ][unique, 'observacao_id'], '@',
+                      superconjunto[filtered, ][unique, 'dataset_id'], sep = ''),
+        popup = 
+          paste0('<b>', superconjunto[filtered, ][unique, 'dataset_id'], '</b><br>',
+                 superconjunto[filtered, ][unique, 'dataset_titulo'], '<br>',
+                 '<i>', superconjunto[filtered, ][unique, 'dataset_licenca'], '</i><br>',
+                 '<a href = "https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso?path=%2F', 
+                 superconjunto[filtered, ][unique, 'dataset_id'], '" target=_blank>',
+                 'Acessar conjunto de dados original na nuvem</a><br>',
+                 '<a href = "https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso/download?path=%2F',
+                 superconjunto[filtered, ][unique, 'dataset_id'], '/',
+                 superconjunto[filtered, ][unique, 'dataset_id'], '.xlsx" target=_blank>',
+                 'Descarregar conjunto de dados original (*.xlsx)</a>'),
+        clusterOptions = markerClusterOptions(maxClusterRadius = input$radius)) %>% 
+      leafem::addHomeButton(
+        ext = raster::extent(
+          sf::st_as_sf(superconjunto[filtered, ][unique, c('coord_x', 'coord_y')], 
+                       coords = c('coord_x', 'coord_y'), na.fail = FALSE)),
+        position = "bottomleft", group = 'Ver tudo')
+    output$outMapa <- renderLeaflet(m)
   })
   
   # Descarregar
@@ -220,10 +237,10 @@ server <- function (input, output) {
         write.table(superconjunto[idx, ], file, sep = '\t', dec = ',', row.names = FALSE)
       })
   
-  # Conjunto(s) de dados brutos(s)
+  # Conjunto(s) de dados original(is)
   output$outRawAll <-
     downloadHandler(
-      filename = paste0('febr-conjuntos-de-dados-brutos-', format(Sys.time(), "%Y-%m-%d"), '.zip'), 
+      filename = paste0('febr-conjuntos-de-dados-originais-', format(Sys.time(), "%Y-%m-%d"), '.zip'), 
       content = function (file) {
         ctb <- unique(superconjunto[input$outDados_rows_all, 'dataset_id'])
         setwd(tempdir())
@@ -233,8 +250,18 @@ server <- function (input, output) {
           download.file(url = url, destfile = paste0(i, '.xlsx'))
         }
         zip(zipfile = file, files = paste0(ctb, '.xlsx'))
-      })
+      }
+    )
+  
+  # Todos os dados do respositório
+  output$outAll <-
+    downloadHandler(
+      filename = paste0('febr-todos-os-dados-do-repositorio-', format(Sys.time(), "%Y-%m-%d"), '.zip'), 
+      content = function (file) {
+        browseURL("https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso/download")
+      }
+    )
 }
 
-# Run the application 
+# Executar a aplicação
 shinyApp(ui = ui, server = server)
