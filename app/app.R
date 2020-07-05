@@ -98,13 +98,22 @@ ui <- fluidPage(
           column(
             width = 3, offset = 3, tags$br(),
             
-            # Dados filtrados
+            # Amostra(s) filtrada(s)
             wellPanel(
               style = 'text-align:center',
               downloadButton(
                 outputId = "outFiltered",
                 class = 'btn',
-                label = HTML('Dados filtrados<br>(*.txt)'))
+                label = HTML('Amostra(s) filtrada(s)<br>(*.txt)'))
+            ),
+            
+            # Local(is) filtrado(is)
+            wellPanel(
+              style = 'text-align:center',
+              downloadButton(
+                outputId = "outFilteredSites",
+                class = 'btn',
+                label = HTML('Local(is) filtrado(s)<br>(*.txt)'))
             ),
             
             # Conjunto(s) de dados filtrado(s)
@@ -131,7 +140,7 @@ ui <- fluidPage(
               downloadButton(
                 outputId = "outAll",
                 class = 'btn',
-                label = HTML('Todos os dados do repositório<br>(*.zip)')
+                label = HTML('Todos os conjuntos de dados<br>(*.zip)')
               )
             )
           )
@@ -218,13 +227,28 @@ server <- function (input, output) {
   
   # Descarregar
   
-  # Dados filtrados
+  # Amostra(s) filtrada(s)
   output$outFiltered <-
     downloadHandler(
-      filename = paste0('febr-dados-filtrados-', format(Sys.time(), "%Y-%m-%d"), '.txt'), 
+      filename = paste0('febr-amostras-filtradas-', format(Sys.time(), "%Y-%m-%d"), '.txt'), 
       content = function (file) {
         write.table(
           superconjunto[input$outDados_rows_all, ], file, sep = '\t', dec = ',', row.names = FALSE)
+      })
+  
+  # Local(is) filtrado(s)
+  output$outFilteredSites <-
+    downloadHandler(
+      filename = paste0('febr-locais-filtrados-', format(Sys.time(), "%Y-%m-%d"), '.txt'),
+      content = function (file) {
+        idx1 <- unique(superconjunto[input$outDados_rows_all, 'dataset_id'])
+        idx2 <- unique(superconjunto[input$outDados_rows_all, 'observacao_id'])
+        idx <- (
+          superconjunto$dataset_id %in% idx1
+        ) & (
+          superconjunto$observacao_id %in% idx2
+        )
+        write.table(superconjunto[idx, ], file, sep = '\t', dec = ',', row.names = FALSE)
       })
   
   # Conjunto(s) de dados filtrado(s)
@@ -253,10 +277,10 @@ server <- function (input, output) {
       }
     )
   
-  # Todos os dados do respositório
+  # Todos os conjuntos de dados
   output$outAll <-
     downloadHandler(
-      filename = paste0('febr-todos-os-dados-do-repositorio-', format(Sys.time(), "%Y-%m-%d"), '.zip'), 
+      filename = paste0('febr-todos-os-conjuntos-de-dados-', format(Sys.time(), "%Y-%m-%d"), '.zip'), 
       content = function (file) {
         browseURL("https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso/download")
       }
