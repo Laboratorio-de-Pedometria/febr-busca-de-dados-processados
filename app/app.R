@@ -1,12 +1,12 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+# Title: Repositório Brasileiro Livre para Dados Abertos do Solo | Dados Processados
+# Version: 1.1.0
+# Date: 2020-07-06
+# Authors: Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br),
+#           Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br)
+# License: GPL (>= 2)
+# Encoding: UTF-8
 
+# Pacotes
 library(shiny)
 library(leaflet)
 library(magrittr)
@@ -22,6 +22,9 @@ superconjunto[, c("coord_precisao", "terrafina", "argila", "silte", "areia")] <-
 
 # Documentação da aplicação
 ajuda <- readLines('www/ajuda.html')
+
+# Descarregar todos os conjuntos de dados
+download <- readLines('www/download.html')
 
 # Definir UI para aplicação
 ui <- fluidPage(
@@ -134,15 +137,8 @@ ui <- fluidPage(
                 label = HTML('Conjunto(s) de dados original(is)<br>(*.zip)'))
             ),
 
-            # Todos os dados
-            wellPanel(
-              style = 'text-align:center',
-              downloadButton(
-                outputId = "outAll",
-                class = 'btn',
-                label = HTML('Todos os conjuntos de dados<br>(*.zip)')
-              )
-            )
+            # Todos os conjuntos de dados
+            HTML(download)
           )
         ),
         
@@ -274,15 +270,6 @@ server <- function (input, output) {
           download.file(url = url, destfile = paste0(i, '.xlsx'))
         }
         zip(zipfile = file, files = paste0(ctb, '.xlsx'))
-      }
-    )
-  
-  # Todos os conjuntos de dados
-  output$outAll <-
-    downloadHandler(
-      filename = paste0('febr-todos-os-conjuntos-de-dados-', format(Sys.time(), "%Y-%m-%d"), '.zip'), 
-      content = function (file) {
-        browseURL("https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso/download")
       }
     )
 }
