@@ -45,6 +45,198 @@
   <p>
     Mais informações sobre expressões regulares e operadores estão disponíveis no artigo da <a href="https://pt.wikipedia.org/wiki/Express%C3%A3o_regular">Wikipédia</a> sobre o tópico.
   </p>
+  <h5 style="font-weight: bold">
+    Variáveis
+  </h5>
+  <p>
+    Os dados processados incluem um conjunto de 40 variáveis, nove das quais descrevem os conjuntos de dados. Outras 17 variáveis são relativas ao local de observação (amostragem, descrição do solo), enquanto as demais 14 são relativas às camadas (horizontes) do solo observadas. A tabela abaixo trás uma descrição sumária de cada uma dessas variáveis.
+  </p>
+</div>
+<div style="overflow-x:auto;">
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }  
+    th, td {
+      text-align: left;
+      padding: 8px;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+  </style>
+  <table>
+    <tr>
+      <th>campo_id</th>
+      <th>campo_descricao</th>
+    </tr>
+    <!-- Dados da tabela 'identificacao' -->
+    <tr>
+      <td>dataset_id</td>
+      <td>Código de identificação do conjunto de dados no FEBR</td>
+    </tr>
+    <tr>
+      <td>dataset_titulo</td>
+      <td>Título do conjunto de dados</td>
+    </tr>
+    <tr>
+      <td>autor_nome</td>
+      <td>Nome do autor (responsável) do conjuntos de dados</td>
+    </tr>
+    <tr>
+      <td>organizacao_nome</td>
+      <td>Nome da organização autora (responsável) do conjunto de dados</td>
+    </tr>
+    <tr>
+      <td>dataset_licenca</td>
+      <td>Licença de uso e distribuição do conjunto de dados</td>
+    </tr>
+    <tr>
+      <td>dataset_versao</td>
+      <td>Número da última versão do conjunto de dados</td>
+    </tr>
+    <tr>
+      <td>publicacao_data</td>
+      <td>Data de publicação da última versão do conjunto de dados</td>
+    </tr>
+    <tr>
+      <td>palavras_chave</td>
+      <td>Termos que descrevem o conjunto de dados</td>
+    </tr>
+    <tr>
+      <td>area_conhecimento</td>
+      <td>Área da ciência do solo à qual o conjunto de dados está relacionado</td>
+    </tr>
+    <!-- Dados da tabela 'observacao' -->
+    <tr>
+      <td>observacao_id</td>
+      <td>Código de identificação da observação do solo no conjunto de dados</td>
+    </tr>
+    <tr>
+      <td>sisb_id</td>
+      <td>Código de identificação da observação do solo no repositório da EMBRAPA</td>
+    </tr>
+    <tr>
+      <td>ibge_id</td>
+      <td>Código de identificação da observação do solo no repositório do IBGE</td>
+    </tr>
+    <tr>
+      <td>observacao_data</td>
+      <td>Data em que a observação (amostragem, descrição) do solo foi realizada</td>
+    </tr>
+    <tr>
+      <td>coord_x</td>
+      <td>Longitude do ponto (central) de observação do solo (SIRGAS 2000, graus)</td>
+    </tr>
+    <tr>
+      <td>coord_y</td>
+      <td>Latitude do ponto (central) de observação do solo (SIRGAS 2000, graus)</td>
+    </tr>
+    <tr>
+      <td>coord_precisao</td>
+      <td>Precisão das coordenadas espaciais (m)</td>
+    </tr>
+    <tr>
+      <td>coord_fonte</td>
+      <td>Fonte das coordenadas espaciais</td>
+    </tr>
+    <tr>
+      <td>pais_id</td>
+      <td>Código ISO do país em que a observação do solo foi realizada</td>
+    </tr>
+    <tr>
+      <td>estado_id</td>
+      <td>Sigla da unidade federativa onde a observação do solo foi realizada</td>
+    </tr>
+    <tr>
+      <td>municipio_id</td>
+      <td>Nome do município onde a observação do solo foi realizada</td>
+    </tr>
+    <tr>
+      <td>amostra_tipo</td>
+      <td>Tipo de amostragem do solo (simples ou composta)</td>
+    </tr>
+    <tr>
+      <td>amostra_quanti</td>
+      <td>Quantidade de subamostragens do solo realizadas (amostragem composta)</td>
+    </tr>
+    <tr>
+      <td>amostra_area</td>
+      <td>Tamanho da área coberta pela amostragem (m<sup>2</sup>)</td>
+    </tr>
+    <tr>
+      <td>taxon_sibcs</td>
+      <td>Classificação taxonômica do solo pelo Sistema Brasileiro de Classificação de Solos</td>
+    </tr>
+    <tr>
+      <td>taxon_st</td>
+      <td>Classificação taxonômica do solo pelo Soil Taxonomy</td>
+    </tr>
+    <tr>
+      <td>taxon_wrb</td>
+      <td>Classificação taxonômica do solo pelo World Reference Base for Soil Resources</td>
+    </tr>
+    <!-- Dados da tabela 'camada' -->
+    <tr>
+      <td>camada_id</td>
+      <td>Número ordinal da camada (horizonte) de solo observada</td>
+    </tr>
+    <tr>
+      <td>amostra_id</td>
+      <td>Código de identificação da amostra (ou sua repetição) no laboratório de análise de solo</td>
+    </tr>
+    <tr>
+      <td>camada_nome</td>
+      <td>Nome (ou símbolo alfanumérico) da camada de solo observada</td>
+    </tr>
+    <tr>
+      <td>profund_sup</td>
+      <td>Limite de profundidade superior da camada de solo observada (cm)</td>
+    </tr>
+    <tr>
+      <td>profund_inf</td>
+      <td>Limite de profundidade inferior da camada de solo observada (cm)</td>
+    </tr>
+    <tr>
+      <td>terrafina</td>
+      <td>Conteúdo de terra fina (g kg<sup>-1</sup>)</td>
+    </tr>
+    <tr>
+      <td>argila</td>
+      <td>Conteúdo de argila na terra fina (g kg<sup>-1</sup>)</td>
+    </tr>
+    <tr>
+      <td>silte</td>
+      <td>Conteúdo de silte na terra fina (g kg<sup>-1</sup>)</td>
+    </tr>
+    <tr>
+      <td>areia</td>
+      <td>Conteúdo de areia na terra fina (g kg<sup>-1</sup>)</td>
+    </tr>
+    <tr>
+      <td>carbono</td>
+      <td>Conteúdo de carbono na terra fina (g kg<sup>-1</sup>)</td>
+    </tr>
+    <tr>
+      <td>ctc</td>
+      <td>Capacidade de troca de cátions potencial na terra fina (cmol<sub>c</sub> kg<sup>-1</sup>)</td>
+    </tr>
+    <tr>
+      <td>ph</td>
+      <td>pH em água na terra fina (sem unidade)</td>
+    </tr>
+    <tr>
+      <td>dsi</td>
+      <td>Densidade do solo inteiro (kg dm<sup>-3</sup>)</td>
+    </tr>
+    <tr>
+      <td>ce</td>
+      <td>Condutividade elétrica na terra fina (mS cm<sup>-1</sup>)</td>
+    </tr>
+  </table>
+</div>
+<div>
   <hr>
   <h4>
     Mapa
@@ -59,11 +251,11 @@
   <h4>
     Descarregar
   </h4>
-<h5 style="font-weight: bold">
-    Visão geral
+  <h5 style="font-weight: bold">
+    Opções de descarregamento
   </h5>
   <p>
-    Em construção!
+    As seguintes opções de descarregamento de (conjuntos de) dados estão disponíveis:
   </p>
   <ul>
     <li>
@@ -82,4 +274,5 @@
       <b>Todos os conjuntos de dados</b>. Dados <i>originais</i> de todos os conjuntos de dados (<code>dataset_id</code>) publicados no repositório. O arquivo descarregado consiste num arquivo compactado no formato ZIP, em que os arquivos constituintes (nos formatos CSV e XLSX) estão dispostos em diretórios, um para cada conjunto de dados existente. Com os dados originais em mãos, você pode aplicar os processamentos de sua preferência.
     </li>
   </ul>
+  <br>
 </div>
