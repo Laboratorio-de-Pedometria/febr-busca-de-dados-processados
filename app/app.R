@@ -1,6 +1,6 @@
 # Title: Repositório Brasileiro Livre para Dados Abertos do Solo | Dados Processados
-# Version: 1.1.0
-# Date: 2020-07-06
+# Version: 1.2.0
+# Date: 2020-11-25
 # Authors: Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br),
 #           Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br)
 # License: GPL (>= 2)
@@ -9,7 +9,7 @@
 # Pacotes
 library(shiny)
 library(leaflet)
-library(magrittr)
+library(shinythemes)
 
 # Descarregar super conjunto de dados
 url <- "http://cloud.utfpr.edu.br/index.php/s/QpG6Tcr6x1NBOcI/download"
@@ -29,19 +29,21 @@ download <- readLines('www/download.html')
 # Definir UI para aplicação
 ui <- fluidPage(
   
+  theme = shinytheme("simplex"),
+  
   tags$head(
     tags$style(".btn{width: 100%;}"),
     tags$style(".well{padding:10px;}")
   ),
-   
+  
   # Título da aplicação
-  titlePanel(title = a(href = 'https://www.pedometria.org/projeto/febr/'), windowTitle = 'FEBR'),
+  titlePanel(title = a(href = 'https://www.pedometria.org/febr/'), windowTitle = 'FEBR'),
   
   fluidRow(
     column(
       width = 2,
       wellPanel(
-        htmltools::HTML('<h3>FEBR</h3><h4>Dados Processados</h4>'), 
+        htmltools::HTML('<h3>FEBR</h3><h4>Busca de Dados Processados</h4>'), 
         
         tags$hr(),
         
@@ -70,12 +72,17 @@ ui <- fluidPage(
         #   buttonLabel = "Navegar..."
         # )
       ),
-      HTML(paste('©', format(Sys.time(), "%Y"), 'A. Samuel-Rosa<br>')),
-      HTML(paste('This work is licensed under', 
-                 '<a href = "https://creativecommons.org/licenses/by-nc-nd/4.0/">CC BY NC ND 4.0</a>')),
-      HTML(paste('<br>Powered by <a href = "https://shiny.rstudio.com/">Shiny</a>,',
-                 '<a href = "https://www.datatables.net/">DataTables</a> and',
-                 '<a href = "https://leafletjs.com/">Leaflet</a>'))
+      HTML(paste0(
+        '<div><p>Desenvolvido por <a href="https://www.pedometria.org/alessandro-samuel-rosa/">',
+        'Alessandro Samuel-Rosa</a>.</p>')),
+      HTML(paste0(
+        '<p>Exceto quando proveniente de outras fontes ou onde especificado o contrário, o ',
+        'conteúdo desta página está licenciado sob uma licença ',
+        '<a href = "https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>.</p>')),
+      HTML(paste(
+        '<p>Página construída com <a href = "https://shiny.rstudio.com/">Shiny</a>,',
+        '<a href = "https://www.datatables.net/">DataTables</a> e',
+        '<a href = "https://leafletjs.com/">Leaflet</a>.</p></div>'))
     ),
     
     column(
@@ -99,7 +106,9 @@ ui <- fluidPage(
         tabPanel(
           title = tags$h3('Descarregar'),
           column(
-            width = 3, offset = 3, tags$br(),
+            width = 3, offset = 2, tags$br(),
+            
+            tags$h4("Dados processados"),
             
             # Amostra(s) filtrada(s)
             wellPanel(
@@ -107,7 +116,7 @@ ui <- fluidPage(
               downloadButton(
                 outputId = "outFiltered",
                 class = 'btn',
-                label = HTML('Amostra(s) filtrada(s)<br>(*.txt)'))
+                label = HTML('Amostras filtradas<br>(*.txt)'))
             ),
             
             # Local(is) filtrado(is)
@@ -116,17 +125,19 @@ ui <- fluidPage(
               downloadButton(
                 outputId = "outFilteredSites",
                 class = 'btn',
-                label = HTML('Local(is) filtrado(s)<br>(*.txt)'))
+                label = HTML('Locais filtrados<br>(*.txt)'))
             ),
-            
             # Conjunto(s) de dados filtrado(s)
             wellPanel(
               style = 'text-align:center',
               downloadButton(
                 outputId = "outFilteredAll", 
                 class = 'btn',
-                label = HTML('Conjunto(s) de dados filtrado(s)<br>(*.txt)'))
-            ),
+                label = HTML('Conjuntos de dados filtrados<br>(*.txt)'))
+            )),
+          column(
+            width = 3, offset = 0, tags$br(),
+            tags$h4("Dados não processados (originais)"),
             
             # Conjunto(s) de dados original(is)
             wellPanel(
@@ -134,9 +145,9 @@ ui <- fluidPage(
               downloadButton(
                 outputId = "outRawAll",
                 class = 'btn',
-                label = HTML('Conjunto(s) de dados original(is)<br>(*.zip)'))
+                label = HTML('Conjuntos de dados filtrados<br>(*.zip)'))
             ),
-
+            
             # Todos os conjuntos de dados
             HTML(download)
           )
@@ -165,18 +176,17 @@ server <- function (input, output) {
         '<a href="https://cloud.utfpr.edu.br/index.php/s/Df6dhfzYJ1DDeso?path=%2F', superconjunto$dataset_id, 
         '" target=_blank title = "Acessar conjunto de dados original">', superconjunto$dataset_id, '</a>'),
       # extensions = 'Buttons',
-      # Plug-in accent-neutralise.js ainda não foi implementado
       # https://github.com/rstudio/DT/issues/822
-      # plugins = 'accent-neutralise', 
+      plugins = 'accent-neutralise',
       options = list(
         language = list(url = '//cdn.datatables.net/plug-ins/1.10.19/i18n/Portuguese-Brasil.json'), 
         pageLength = 5, 
         # dom = 'B<"clear">lfrtip', 
         search = list(regex = TRUE, caseInsensitive = TRUE)#,
         # buttons = list(
-          # list(extend = 'copy', buttons = 'copy', text = 'Copiar'),
-          # list(extend = 'csv', buttons = 'csv', text = 'CSV'),
-          # list(extend = 'print', buttons = 'print', text = 'Imprimir')
+        # list(extend = 'copy', buttons = 'copy', text = 'Copiar'),
+        # list(extend = 'csv', buttons = 'csv', text = 'CSV'),
+        # list(extend = 'print', buttons = 'print', text = 'Imprimir')
         # )
       )
     )
@@ -186,15 +196,17 @@ server <- function (input, output) {
   observe({
     filtered <- input$outDados_rows_all
     unique <- !duplicated(superconjunto[filtered, c("dataset_id", "observacao_id")])
-    m <- 
-      leaflet() %>% 
-      addProviderTiles("Esri.WorldStreetMap", group = "Esri.WorldStreetMap") %>% 
-      addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
+    map <- leaflet()
+    map <- addProviderTiles(map, provider = "Esri.WorldStreetMap", group = "Esri.WorldStreetMap")
+    map <- addProviderTiles(map, provider = "Esri.WorldImagery", group = "Esri.WorldImagery")
+    map <- 
       addLayersControl(
-        baseGroups = c("Esri.WorldStreetMap", "Esri.WorldImagery"),
-        options = layersControlOptions(collapsed = TRUE)) %>%
-      addMiniMap() %>% 
+        map, baseGroups = c("Esri.WorldStreetMap", "Esri.WorldImagery"),
+        options = layersControlOptions(collapsed = TRUE))
+    map <- addMiniMap(map)
+    map <- 
       addAwesomeMarkers(
+        map,
         lng = superconjunto[filtered, ][unique, 'coord_x'],
         lat = superconjunto[filtered, ][unique, 'coord_y'], 
         icon = awesomeIcons(
@@ -212,13 +224,15 @@ server <- function (input, output) {
                  superconjunto[filtered, ][unique, 'dataset_id'], '/',
                  superconjunto[filtered, ][unique, 'dataset_id'], '.xlsx" target=_blank>',
                  'Descarregar conjunto de dados original (*.xlsx)</a>'),
-        clusterOptions = markerClusterOptions(maxClusterRadius = input$radius)) %>% 
+        clusterOptions = markerClusterOptions(maxClusterRadius = input$radius))
+    map <- 
       leafem::addHomeButton(
+        map,
         ext = raster::extent(
           sf::st_as_sf(superconjunto[filtered, ][unique, c('coord_x', 'coord_y')], 
                        coords = c('coord_x', 'coord_y'), na.fail = FALSE)),
         position = "bottomleft", group = 'Ver tudo')
-    output$outMapa <- renderLeaflet(m)
+    output$outMapa <- renderLeaflet(map)
   })
   
   # Descarregar
