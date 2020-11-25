@@ -1,0 +1,10 @@
+name: febr-busca-de-dados-processados
+title: FEBR | Busca de Dados Processados
+username:
+account: pedometria
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3301424
+bundleId: 3905317
+url: https://pedometria.shinyapps.io/febr-busca-de-dados-processados/
+when: 1606320922.89042

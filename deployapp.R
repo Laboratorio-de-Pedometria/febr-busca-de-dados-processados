@@ -1,5 +1,5 @@
 rsconnect::deployApp(
   appDir = 'app', 
   appFiles = c("app.R", "www"),
-  appName = "FEBR",
+  appName = "febr-busca-de-dados-processados",
   appTitle = "FEBR | Busca de Dados Processados")
