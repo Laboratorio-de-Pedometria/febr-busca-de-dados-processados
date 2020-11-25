@@ -5,6 +5,6 @@ account: pedometria
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 888212
-bundleId: 3345622
+bundleId: 3359800
 url: https://pedometria.shinyapps.io/febr/
-when: 1593727346.71832
+when: 1594072896.21412
