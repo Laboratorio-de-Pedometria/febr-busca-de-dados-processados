@@ -1,10 +1,10 @@
 # febr-shiny
-Repositório Brasileiro Livre para Dados Abertos do Solo - aplicação Shiny
+Repositório Brasileiro de Dados de Solo - aplicação Shiny
 
 ## Exemplos
 
 Algumas aplicações desenvolvidos usando o Shiny que podem servir de exemplo ao 
-desenvolvimento da aplicação do ___febr___.
+desenvolvimento da aplicação do ___SoilData___.
 
 * [SplineApp][splineapp]: possui uma caixa na lateral esquerda para a entrada de 
   dados e configurações, e quatro abas centrais para diferentes informações: 

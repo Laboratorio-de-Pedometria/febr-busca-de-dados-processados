@@ -1,8 +1,8 @@
-# Title: Repositório Brasileiro Livre para Dados Abertos do Solo | Dados Processados
-# Version: 1.2.0
-# Date: 2020-11-25
+# Title: Repositório Brasileiro de Dados de Solo | Dados Integrados
+# Version: 1.3.0
+# Date: 2025-05-06
 # Authors: Alessandro Samuel-Rosa (alessandrorosa@utfpr.edu.br),
-#           Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br)
+#          Matheus Ferreira Ramos (matheusramos@alunos.utfpr.edu.br)
 # License: GPL (>= 2)
 # Encoding: UTF-8
 
@@ -43,7 +43,7 @@ ui <- fluidPage(
     column(
       width = 2,
       wellPanel(
-        htmltools::HTML('<h3>FEBR</h3><h4>Busca de Dados Processados</h4>'), 
+        htmltools::HTML('<h3>SoilData</h3><h4>Dados Integrados</h4>'),
         
         tags$hr(),
         
@@ -78,7 +78,7 @@ ui <- fluidPage(
       HTML(paste0(
         '<p>Exceto quando proveniente de outras fontes ou onde especificado o contrário, o ',
         'conteúdo desta página está licenciado sob uma licença ',
-        '<a href = "https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>.</p>')),
+        '<a href = "https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</p>')),
       HTML(paste(
         '<p>Página construída com <a href = "https://shiny.rstudio.com/">Shiny</a>,',
         '<a href = "https://www.datatables.net/">DataTables</a> e',
@@ -108,7 +108,7 @@ ui <- fluidPage(
           column(
             width = 3, offset = 2, tags$br(),
             
-            tags$h4("Dados processados"),
+            tags$h4("Dados integrados"),
             
             # Amostra(s) filtrada(s)
             wellPanel(
@@ -137,7 +137,7 @@ ui <- fluidPage(
             )),
           column(
             width = 3, offset = 0, tags$br(),
-            tags$h4("Dados não processados (originais)"),
+            tags$h4("Dados não integrados (originais)"),
             
             # Conjunto(s) de dados original(is)
             wellPanel(
@@ -240,7 +240,7 @@ server <- function (input, output) {
   # Amostra(s) filtrada(s)
   output$outFiltered <-
     downloadHandler(
-      filename = paste0('febr-amostras-filtradas-', format(Sys.time(), "%Y-%m-%d"), '.txt'), 
+      filename = paste0('soildata-amostras-filtradas-', format(Sys.time(), "%Y-%m-%d"), '.txt'), 
       content = function (file) {
         write.table(
           superconjunto[input$outDados_rows_all, ], file, sep = '\t', dec = ',', row.names = FALSE)
@@ -249,7 +249,7 @@ server <- function (input, output) {
   # Local(is) filtrado(s)
   output$outFilteredSites <-
     downloadHandler(
-      filename = paste0('febr-locais-filtrados-', format(Sys.time(), "%Y-%m-%d"), '.txt'),
+      filename = paste0('soildata-locais-filtrados-', format(Sys.time(), "%Y-%m-%d"), '.txt'),
       content = function (file) {
         idx1 <- unique(superconjunto[input$outDados_rows_all, 'dataset_id'])
         idx2 <- unique(superconjunto[input$outDados_rows_all, 'observacao_id'])
@@ -264,7 +264,7 @@ server <- function (input, output) {
   # Conjunto(s) de dados filtrado(s)
   output$outFilteredAll <-
     downloadHandler(
-      filename = paste0('febr-conjuntos-de-dados-filtrados-', format(Sys.time(), "%Y-%m-%d"), '.txt'), 
+      filename = paste0('soildata-conjuntos-de-dados-filtrados-', format(Sys.time(), "%Y-%m-%d"), '.txt'), 
       content = function (file) {
         idx <- unique(superconjunto[input$outDados_rows_all, 'dataset_id'])
         idx <- superconjunto$dataset_id %in% idx
@@ -274,7 +274,7 @@ server <- function (input, output) {
   # Conjunto(s) de dados original(is)
   output$outRawAll <-
     downloadHandler(
-      filename = paste0('febr-conjuntos-de-dados-originais-', format(Sys.time(), "%Y-%m-%d"), '.zip'), 
+      filename = paste0('soildata-conjuntos-de-dados-originais-', format(Sys.time(), "%Y-%m-%d"), '.zip'), 
       content = function (file) {
         ctb <- unique(superconjunto[input$outDados_rows_all, 'dataset_id'])
         setwd(tempdir())
